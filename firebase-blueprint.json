@@ -1,0 +1,75 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Represents a user in the application, including admin roles.",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "User email"
+        },
+        "isAdmin": {
+          "type": "boolean",
+          "description": "Whether the user is an admin"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp of profile creation"
+        }
+      },
+      "required": ["email", "isAdmin", "createdAt"]
+    },
+    "Message": {
+      "title": "User Message",
+      "description": "A message submitted by a user, subject to content moderation.",
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "The message text"
+        },
+        "authorId": {
+          "type": "string",
+          "description": "UID of the user who created it"
+        },
+        "authorEmail": {
+          "type": "string",
+          "description": "Email of the user who created it"
+        },
+        "flagged": {
+          "type": "boolean",
+          "description": "True if flagged by AI"
+        },
+        "flagReason": {
+          "type": "string",
+          "description": "Reason for flagging, or empty string"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "approved", "rejected"],
+          "description": "Moderation status"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation timestamp"
+        }
+      },
+      "required": ["text", "authorId", "authorEmail", "flagged", "flagReason", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/User"
+      },
+      "description": "User profiles and role definitions."
+    },
+    "/messages/{messageId}": {
+      "schema": {
+        "$ref": "#/entities/Message"
+      },
+      "description": "User submitted messages."
+    }
+  }
+}

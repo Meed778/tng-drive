@@ -1,0 +1,154 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Primitives
+    function isValidId(id) { 
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isSignedIn() { return request.auth != null && request.auth.token.email_verified == true; }
+    function isOwner(uid) { return isSignedIn() && request.auth.uid == uid; }
+    
+    // Check if the current user has isAdmin = true in their profile.
+    function isAdmin() { 
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) 
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true; 
+    }
+
+    // Validation Blueprint for User
+    function isValidUser(data) {
+      return data.keys().hasAll(['email', 'isAdmin', 'createdAt'])
+        && data.keys().size() == 3
+        && data.email is string
+        && data.email.size() > 0 && data.email.size() <= 255
+        && data.isAdmin is bool
+        && data.createdAt == request.time;
+    }
+
+    match /users/{userId} {
+      // 1. Path Variable Hardening
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      // No blanket read
+      allow list: if false; 
+
+      // Creation
+      // Only the user themselves can create their profile.
+      // Prevent self-assigning admin role. A user CANNOT set `isAdmin: true` on creation
+      // unless they are matching an admin bootstrap rule, or here they just can't.
+      allow create: if isValidId(userId) 
+        && isOwner(userId) 
+        && isValidUser(incoming())
+        && incoming().isAdmin == false; // Forcing false for standard creation
+
+      // Updates
+      // Only admins can update user profiles (e.g. to elevate roles).
+      // Or users can update their own profile, but we don't have fields that need updating right now.
+      allow update: if isValidId(userId) && isAdmin() 
+        && incoming().diff(existing()).affectedKeys().hasOnly(['isAdmin']);
+      
+      allow delete: if isValidId(userId) && isAdmin();
+    }
+
+    // Validation Blueprint for Message
+    function isValidMessage(data) {
+      return data.keys().hasAll(['text', 'authorId', 'authorEmail', 'flagged', 'flagReason', 'status', 'createdAt'])
+        && data.keys().size() == 7
+        && data.text is string && data.text.size() > 0 && data.text.size() <= 10000
+        && data.authorId is string && data.authorId.size() <= 128
+        && data.authorEmail is string && data.authorEmail.size() <= 255
+        && data.flagged is bool
+        && data.flagReason is string && data.flagReason.size() <= 1000
+        && data.status is string && data.status in ['pending', 'approved', 'rejected']
+        // AuthorID must match currently signed in user
+        && data.authorId == request.auth.uid
+        && data.createdAt == request.time;
+    }
+
+    match /messages/{messageId} {
+      // Getting a single message: Owners can read their own, Admins can read any.
+      allow get: if isValidId(messageId) && (isOwner(existing().authorId) || isAdmin());
+      
+      // Listing messages
+      // Standard users can only list their own messages!
+      // Admins can list any messages (for review).
+      // Standard users must query with `.where('authorId', '==', uid)`
+      // Admins might query for `.where('status', '==', 'pending')`
+      // So we evaluate `resource.data.authorId` for non-admins to ensure they are querying their own.
+      // However, if isAdmin() is true, they can list any. But since `isAdmin` uses a `get()`,
+      // placing it in `allow list` is inefficient/expensive if called for every document.
+      // Wait, `list` rules apply to the QUERY, not every doc individually, but Firestore does evaluate it per doc sometimes?
+      // Actually `isAdmin()` evaluates once per request if there are no path vars in it.
+      allow list: if isSignedIn() && (resource.data.authorId == request.auth.uid || isAdmin());
+
+      allow create: if isValidId(messageId) 
+        && isSignedIn()
+        && isValidMessage(incoming());
+
+      allow update: if isValidId(messageId) && (
+        (isAdmin() && incoming().diff(existing()).affectedKeys().hasOnly(['status']))
+      );
+
+      allow delete: if isValidId(messageId) && isAdmin();
+    }
+
+    match /cars/{carId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Validation Blueprint for Booking
+    function isValidBooking(data) {
+      return data.keys().hasAll(['carId', 'carName', 'customerName', 'customerPhone', 'startDate', 'endDate', 'userId', 'status', 'createdAt'])
+        && data.keys().size() == 9
+        && data.carId is string
+        && data.carName is string
+        && data.customerName is string && data.customerName.size() <= 200
+        && data.customerPhone is string && data.customerPhone.size() <= 50
+        && data.startDate is string
+        && data.endDate is string
+        && data.userId is string
+        && data.status in ['pending', 'confirmed', 'cancelled']
+        && (data.userId == 'anonymous' || (request.auth != null && data.userId == request.auth.uid))
+        && data.createdAt == request.time;
+    }
+
+    match /bookings/{bookingId} {
+      // Public read to allow checking dates (returns carId, startDate, endDate, etc)
+      allow read: if true;
+      allow create: if isValidId(bookingId) 
+        && isValidBooking(incoming());
+      allow update: if isValidId(bookingId) 
+        && isAdmin() 
+        && incoming().diff(existing()).affectedKeys().hasOnly(['status']);
+      allow delete: if isValidId(bookingId) && isAdmin();
+    }
+
+    // Validation Blueprint for Reviews
+    function isValidReview(data) {
+      return data.keys().hasAll(['carId', 'userId', 'userName', 'rating', 'comment', 'createdAt'])
+        && data.keys().size() == 6
+        && data.carId is string
+        && data.userName is string
+        && data.rating is number && data.rating >= 1 && data.rating <= 5
+        && data.comment is string && data.comment.size() <= 1000
+        && data.userId == request.auth.uid
+        && data.createdAt == request.time;
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isValidId(reviewId) && isSignedIn() && isValidReview(incoming());
+      allow delete: if isValidId(reviewId) && isAdmin();
+    }
+    match /settings/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}
