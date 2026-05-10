@@ -13,17 +13,18 @@ import { AdminCars } from './components/AdminCars';
 import { AdminAnalytics } from './components/AdminAnalytics';
 import { AdminSettings } from './components/AdminSettings';
 import { AdminAssistant } from './components/AdminAssistant';
+import { Hero } from './components/Hero';
 import { CarFleet } from './components/CarFleet';
 import { CarDetails } from './components/CarDetails';
 import { cars as mockCars, Car } from './services/carsData';
 import { CarFront } from 'lucide-react';
 
-type ViewState = 'fleet' | 'details' | 'admin-bookings' | 'admin-cars' | 'admin-analytics' | 'admin-settings' | 'admin-assistant';
+type ViewState = 'home' | 'fleet' | 'details' | 'admin-bookings' | 'admin-cars' | 'admin-analytics' | 'admin-settings' | 'admin-assistant';
 
 export default function App() {
   const { user, profile, logout, login } = useAuth();
   const { settings } = useSettings();
-  const [currentView, setCurrentView] = useState<ViewState>('fleet');
+  const [currentView, setCurrentView] = useState<ViewState>('home');
   const [selectedCarId, setSelectedCarId] = useState<string | null>(null);
   
   const [dbCars, setDbCars] = useState<Car[]>([]);
@@ -78,7 +79,7 @@ export default function App() {
   return (
     <div className="min-h-screen w-full bg-[#0A0A0A] text-[#E5E5E5] font-sans flex flex-col overflow-x-hidden select-none" dir="rtl">
       <header className="h-24 flex items-center justify-between px-6 md:px-12 border-b border-white/5 shrink-0">
-        <div className="flex items-center gap-4 cursor-pointer group" onClick={() => setCurrentView('fleet')}>
+        <div className="flex items-center gap-4 cursor-pointer group" onClick={() => setCurrentView('home')}>
           <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[#C5A059] transform group-hover:scale-105 transition-transform shadow-[0_0_15px_rgba(197,160,89,0.3)]">
             <img 
               src={logoImages[logoIndex]} 
@@ -91,6 +92,7 @@ export default function App() {
           </span>
         </div>
         <nav className="hidden md:flex items-center gap-10 text-[11px] font-bold tracking-[0.1em] text-white/50">
+          <button onClick={() => setCurrentView('home')} className={`hover:text-white transition-colors cursor-pointer ${currentView === 'home' ? 'text-[#C5A059] border-b border-[#C5A059] pb-1' : ''}`}>الرئيسية</button>
           <button onClick={() => setCurrentView('fleet')} className={`hover:text-white transition-colors cursor-pointer ${currentView === 'fleet' ? 'text-[#C5A059] border-b border-[#C5A059] pb-1' : ''}`}>أسطول السيارات</button>
           
           {isAdmin && (
@@ -120,8 +122,12 @@ export default function App() {
         </nav>
       </header>
 
-      <main className="flex-1 flex flex-col px-6 md:px-12 py-12 md:py-16 gap-16 lg:overflow-visible">
+      <main className={`flex-1 flex flex-col ${currentView === 'home' ? 'px-0 py-0' : 'px-6 md:px-12 py-12 md:py-16'} gap-16 lg:overflow-visible`}>
         
+        {currentView === 'home' && (
+          <Hero siteName={settings.siteName} onExplore={() => setCurrentView('fleet')} />
+        )}
+
         {currentView === 'fleet' && (
            <CarFleet cars={dbCars} onSelectCar={navigateToDetails} />
         )}
