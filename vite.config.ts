@@ -5,7 +5,7 @@ import {defineConfig, loadEnv} from 'vite';
 
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
-  return {
+  return { '/tng-drive/', // Replace with your repository name
     base: '//',
     plugins: [react(), tailwindcss()],
     define: {
