@@ -74,15 +74,18 @@ export default function App() {
     setCurrentView('details');
   };
 
-  const isAdminMode = window.location.search.includes('admin') || window.location.hash.includes('admin');
-  const isAdmin = profile?.isAdmin || user?.email === 'pimo1999loko@gmail.com';
+  const isAdminMode = window.location.pathname.includes('admin') || window.location.search.includes('admin') || window.location.hash.includes('admin');
+  const isAdmin = profile?.isAdmin || user?.email === 'pimo1999loko@gmail.com' || user?.email === 'tangierdrive40@gmail.com';
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    if (isAdmin && isAdminMode && currentView === 'home') {
+    console.log("Admin Status:", { isAdmin, isAdminMode, email: user?.email, view: currentView });
+    // If we are on /admin or similar, and not logged in, we stay on home but with admin mode enabled
+    // If logged in as admin, we automatically go to the dashboard
+    if (isAdmin && isAdminMode && (currentView === 'home' || currentView === 'fleet')) {
       setCurrentView('admin-analytics');
     }
-  }, [isAdmin, isAdminMode]);
+  }, [isAdmin, isAdminMode, currentView, user?.email]);
 
   return (
     <div className="min-h-screen w-full bg-[#0A0A0A] text-[#E5E5E5] font-sans flex flex-col overflow-x-hidden select-none" dir="rtl">
@@ -120,10 +123,11 @@ export default function App() {
           ) : (
             <button 
               onClick={login} 
-              className={`hover:text-white transition-all cursor-pointer border border-[#C5A059] px-4 py-2 text-[#C5A059] ${isAdminMode ? 'opacity-100 scale-110' : 'opacity-0 hover:opacity-100'} w-8 h-8 rounded-full flex items-center justify-center p-0`}
+              className={`transition-all duration-300 cursor-pointer border border-[#C5A059] px-4 py-2 text-[#C5A059] ${isAdminMode ? 'opacity-100 bg-[#C5A059]/10 rounded-sm flex items-center gap-3 px-6' : 'opacity-0 hover:opacity-100 w-10 h-10 rounded-full flex items-center justify-center p-0'}`}
               title="Admin Login"
             >
-              🔒
+              <span>🔒</span>
+              {isAdminMode && <span className="text-[11px] font-bold tracking-wider">دخول الإدارة</span>}
             </button>
           )}
         </nav>
@@ -180,7 +184,14 @@ export default function App() {
       <main className={`flex-1 flex flex-col ${currentView === 'home' ? 'px-0 py-0' : 'px-6 md:px-12 py-12 md:py-16'} gap-16 lg:overflow-visible relative`}>
         
         {currentView === 'home' && (
-          <Hero siteName={settings.siteName} onExplore={() => setCurrentView('fleet')} />
+          <>
+            <Hero siteName={settings.siteName} onExplore={() => setCurrentView('fleet')} />
+            {isAdminMode && !isAdmin && (
+              <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-[#C5A059] text-black px-6 py-2 rounded-full text-xs font-bold animate-bounce z-40 shadow-xl border-2 border-black">
+                يرجى تسجيل الدخول من الزر 🔒 في الأعلى للوصول للوحة التحكم
+              </div>
+            )}
+          </>
         )}
 
         {currentView === 'fleet' && (
@@ -220,6 +231,16 @@ export default function App() {
           <span>سيارات معقمة بالكامل</span>
         </div>
         <div className="flex items-center gap-6">
+          <button 
+            onClick={() => {
+              const url = new URL(window.location.href);
+              url.searchParams.set('admin', 'true');
+              window.location.href = url.toString();
+            }} 
+            className="text-[8px] text-white/10 hover:text-white/30 transition-colors cursor-pointer"
+          >
+            Management
+          </button>
           <a href={settings.instagramUrl} target="_blank" rel="noopener noreferrer" className="hover:text-[#C5A059] transition-colors font-sans text-xs">
             Instagram
           </a>

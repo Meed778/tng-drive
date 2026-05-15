@@ -39,13 +39,13 @@ service cloud.firestore {
 
       // Creation
       // Only the user themselves can create their profile.
-      // Allow bootstrap email to have isAdmin: true, everyone else false.
+      // Allow bootstrap emails to have isAdmin: true, everyone else false.
       allow create: if isValidId(userId) 
         && isOwner(userId) 
         && isValidUser(incoming())
         && (
-          (request.auth.token.email == 'pimo1999loko@gmail.com' && incoming().isAdmin == true) ||
-          (request.auth.token.email != 'pimo1999loko@gmail.com' && incoming().isAdmin == false)
+          ((request.auth.token.email == 'pimo1999loko@gmail.com' || request.auth.token.email == 'tangierdrive40@gmail.com') && incoming().isAdmin == true) ||
+          ((request.auth.token.email != 'pimo1999loko@gmail.com' && request.auth.token.email != 'tangierdrive40@gmail.com') && incoming().isAdmin == false)
         );
 
       // Updates
