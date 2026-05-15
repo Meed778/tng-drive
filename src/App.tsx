@@ -76,11 +76,18 @@ export default function App() {
 
   const isAdminMode = window.location.search.includes('admin') || window.location.hash.includes('admin');
   const isAdmin = profile?.isAdmin || user?.email === 'pimo1999loko@gmail.com';
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (isAdmin && isAdminMode && currentView === 'home') {
+      setCurrentView('admin-analytics');
+    }
+  }, [isAdmin, isAdminMode]);
 
   return (
     <div className="min-h-screen w-full bg-[#0A0A0A] text-[#E5E5E5] font-sans flex flex-col overflow-x-hidden select-none" dir="rtl">
-      <header className="h-24 flex items-center justify-between px-6 md:px-12 border-b border-white/5 shrink-0">
-        <div className="flex items-center gap-4 cursor-pointer group" onClick={() => setCurrentView('home')}>
+      <header className="h-24 flex items-center justify-between px-6 md:px-12 border-b border-white/5 shrink-0 relative z-50">
+        <div className="flex items-center gap-4 cursor-pointer group" onClick={() => { setCurrentView('home'); setIsMobileMenuOpen(false); }}>
           <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[#C5A059] transform group-hover:scale-105 transition-transform shadow-[0_0_15px_rgba(197,160,89,0.3)]">
             <img 
               src={logoImages[logoIndex]} 
@@ -93,23 +100,21 @@ export default function App() {
             {settings.siteName}
           </span>
         </div>
-        <nav className="hidden md:flex items-center gap-10 text-[11px] font-bold tracking-[0.1em] text-white/50">
+
+        {/* Desktop Nav */}
+        <nav className="hidden lg:flex items-center gap-10 text-[11px] font-bold tracking-[0.1em] text-white/50">
           <button onClick={() => setCurrentView('home')} className={`hover:text-white transition-colors cursor-pointer ${currentView === 'home' ? 'text-[#C5A059] border-b border-[#C5A059] pb-1' : ''}`}>الرئيسية</button>
           <button onClick={() => setCurrentView('fleet')} className={`hover:text-white transition-colors cursor-pointer ${currentView === 'fleet' ? 'text-[#C5A059] border-b border-[#C5A059] pb-1' : ''}`}>أسطول السيارات</button>
           
           {isAdmin && (
             <>
-              <button onClick={() => setCurrentView('admin-analytics')} className={`hover:text-white transition-colors cursor-pointer ${currentView === 'admin-analytics' ? 'text-[#C5A059] border-b border-[#C5A059] pb-1' : ''}`}>الإحصائيات</button>
-              <button onClick={() => setCurrentView('admin-bookings')} className={`hover:text-white transition-colors cursor-pointer ${currentView === 'admin-bookings' ? 'text-[#C5A059] border-b border-[#C5A059] pb-1' : ''}`}>الحجوزات</button>
-              <button onClick={() => setCurrentView('admin-cars')} className={`hover:text-white transition-colors cursor-pointer ${currentView === 'admin-cars' ? 'text-[#C5A059] border-b border-[#C5A059] pb-1' : ''}`}>إدارة السيارات</button>
-              <button id="ai-assistant-tab-trigger" onClick={() => setCurrentView('admin-assistant')} className={`hover:text-white transition-colors cursor-pointer ${currentView === 'admin-assistant' ? 'text-[#C5A059] border-b border-[#C5A059] pb-1' : ''}`}>المساعد الذكي</button>
-              <button onClick={() => setCurrentView('admin-settings')} className={`hover:text-white transition-colors cursor-pointer ${currentView === 'admin-settings' ? 'text-[#C5A059] border-b border-[#C5A059] pb-1' : ''}`}>إعدادات الموقع</button>
+              <button onClick={() => setCurrentView('admin-analytics')} className={`hover:text-white transition-colors cursor-pointer ${currentView.startsWith('admin-') ? 'text-[#C5A059] border-b border-[#C5A059] pb-1' : ''}`}>لوحة التحكم</button>
             </>
           )}
           
           {user ? (
             <div className="flex items-center gap-4 mr-8 border-r border-white/10 pr-8">
-              <span className="text-[10px]">{user.email}</span>
+              <span className="text-[10px] opacity-50">{user.email}</span>
               <button onClick={logout} className="hover:text-red-400 transition-colors cursor-pointer text-[10px]">تسجيل الخروج</button>
             </div>
           ) : (
@@ -122,9 +127,57 @@ export default function App() {
             </button>
           )}
         </nav>
+
+        {/* Mobile Menu Toggle */}
+        <button 
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="lg:hidden p-2 text-[#C5A059] hover:bg-white/5 rounded-full transition-colors"
+        >
+          {isMobileMenuOpen ? (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          )}
+        </button>
+
+        {/* Mobile Menu Overlay */}
+        {isMobileMenuOpen && (
+          <div className="fixed inset-0 top-24 bg-[#0A0A0A] z-40 flex flex-col p-8 gap-6 lg:hidden animate-in fade-in slide-in-from-top-4 duration-300">
+             <button onClick={() => { setCurrentView('home'); setIsMobileMenuOpen(false); }} className={`text-right py-4 border-b border-white/5 text-lg ${currentView === 'home' ? 'text-[#C5A059]' : 'text-white/70'}`}>الرئيسية</button>
+             <button onClick={() => { setCurrentView('fleet'); setIsMobileMenuOpen(false); }} className={`text-right py-4 border-b border-white/5 text-lg ${currentView === 'fleet' ? 'text-[#C5A059]' : 'text-white/70'}`}>أسطول السيارات</button>
+             
+             {isAdmin && (
+               <>
+                 <button onClick={() => { setCurrentView('admin-analytics'); setIsMobileMenuOpen(false); }} className={`text-right py-4 border-b border-white/5 text-lg ${currentView.startsWith('admin-') ? 'text-[#C5A059]' : 'text-white/70'}`}>لوحة التحكم</button>
+               </>
+             )}
+
+             <div className="mt-auto flex flex-col gap-4">
+                {user ? (
+                  <>
+                    <div className="text-white/30 text-xs text-center">{user.email}</div>
+                    <button onClick={() => { logout(); setIsMobileMenuOpen(false); }} className="w-full py-4 border border-red-500/30 text-red-500 rounded-sm">تسجيل الخروج</button>
+                  </>
+                ) : (
+                  <button onClick={() => { login(); setIsMobileMenuOpen(false); }} className={`w-full py-4 border border-[#C5A059] text-[#C5A059] rounded-sm ${isAdminMode ? 'block' : 'hidden'}`}>تسجيل الدخول (أدمن)</button>
+                )}
+             </div>
+          </div>
+        )}
       </header>
 
-      <main className={`flex-1 flex flex-col ${currentView === 'home' ? 'px-0 py-0' : 'px-6 md:px-12 py-12 md:py-16'} gap-16 lg:overflow-visible`}>
+      {/* Admin Sub-navigation (if in admin view) */}
+      {isAdmin && currentView.startsWith('admin-') && (
+        <div className="h-12 bg-[#141414] border-b border-white/5 flex items-center px-6 md:px-12 gap-8 overflow-x-auto no-scrollbar scroll-smooth">
+           <button onClick={() => setCurrentView('admin-analytics')} className={`whitespace-nowrap text-[10px] font-bold tracking-widest uppercase transition-colors hover:text-white ${currentView === 'admin-analytics' ? 'text-[#C5A059]' : 'text-white/30'}`}>الإحصائيات</button>
+           <button onClick={() => setCurrentView('admin-bookings')} className={`whitespace-nowrap text-[10px] font-bold tracking-widest uppercase transition-colors hover:text-white ${currentView === 'admin-bookings' ? 'text-[#C5A059]' : 'text-white/30'}`}>الحجوزات</button>
+           <button onClick={() => setCurrentView('admin-cars')} className={`whitespace-nowrap text-[10px] font-bold tracking-widest uppercase transition-colors hover:text-white ${currentView === 'admin-cars' ? 'text-[#C5A059]' : 'text-white/30'}`}>السيارات</button>
+           <button onClick={() => setCurrentView('admin-assistant')} className={`whitespace-nowrap text-[10px] font-bold tracking-widest uppercase transition-colors hover:text-white ${currentView === 'admin-assistant' ? 'text-[#C5A059]' : 'text-white/30'}`}>المساعد</button>
+           <button onClick={() => setCurrentView('admin-settings')} className={`whitespace-nowrap text-[10px] font-bold tracking-widest uppercase transition-colors hover:text-white ${currentView === 'admin-settings' ? 'text-[#C5A059]' : 'text-white/30'}`}>الإعدادات</button>
+        </div>
+      )}
+
+      <main className={`flex-1 flex flex-col ${currentView === 'home' ? 'px-0 py-0' : 'px-6 md:px-12 py-12 md:py-16'} gap-16 lg:overflow-visible relative`}>
         
         {currentView === 'home' && (
           <Hero siteName={settings.siteName} onExplore={() => setCurrentView('fleet')} />
