@@ -27,7 +27,7 @@ export function useAuth() {
             // Create user profile
             const profileData = {
               email: u.email || '',
-              isAdmin: u.email === 'pimo1999loko@gmail.com',
+              isAdmin: u.email === 'pimo1999loko@gmail.com' || u.email === 'tangierdrive40@gmail.com',
               createdAt: serverTimestamp()
             };
             await setDoc(docRef, profileData);

@@ -28,27 +28,6 @@ export default function App() {
   const [selectedCarId, setSelectedCarId] = useState<string | null>(null);
   
   const [dbCars, setDbCars] = useState<Car[]>([]);
-  const [logoIndex, setLogoIndex] = useState(0);
-
-  const logoImages = [
-    // Lamborghini
-    "https://images.unsplash.com/photo-1544839309-847253d865c3?auto=format&fit=crop&q=100&w=2048&h=2048",
-    // G-Class
-    "https://images.unsplash.com/photo-1520031441872-265e4ff70366?auto=format&fit=crop&q=100&w=2048&h=2048",
-    // Rolls Royce
-    "https://images.unsplash.com/photo-1631700611307-37dbcb89df7e?auto=format&fit=crop&q=100&w=2048&h=2048",
-    // Ferrari/Supercar
-    "https://images.unsplash.com/photo-1592198084033-aade902d1aae?auto=format&fit=crop&q=100&w=2048&h=2048",
-    // Mercedes AMG
-    "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&q=100&w=2048&h=2048"
-  ];
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setLogoIndex((prev) => (prev + 1) % logoImages.length);
-    }, 4500); // changes every 4.5 seconds
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     async function fetchCars() {
@@ -75,15 +54,18 @@ export default function App() {
   };
 
   const isAdminMode = window.location.pathname.includes('admin') || window.location.search.includes('admin') || window.location.hash.includes('admin');
-  const isAdmin = profile?.isAdmin || user?.email === 'pimo1999loko@gmail.com' || user?.email === 'tangierdrive40@gmail.com';
+  const isAdmin = !!user && (user.email === 'pimo1999loko@gmail.com' || user.email === 'tangierdrive40@gmail.com' || profile?.isAdmin === true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    console.log("Admin Status:", { isAdmin, isAdminMode, email: user?.email, view: currentView });
-    // If we are on /admin or similar, and not logged in, we stay on home but with admin mode enabled
-    // If logged in as admin, we automatically go to the dashboard
-    if (isAdmin && isAdminMode && (currentView === 'home' || currentView === 'fleet')) {
-      setCurrentView('admin-analytics');
+    if (isAdminMode) {
+      console.log("[AdminDebug] Checking access:", { isAdmin, user: user?.email, currentView });
+      
+      // If we are logged in as admin and in admin mode, force navigation to analytics if we are stuck on generic pages
+      if (isAdmin && (currentView === 'home' || currentView === 'fleet' || currentView === 'details')) {
+        console.log("[AdminDebug] Automating navigation to admin-analytics");
+        setCurrentView('admin-analytics');
+      }
     }
   }, [isAdmin, isAdminMode, currentView, user?.email]);
 
@@ -91,17 +73,18 @@ export default function App() {
     <div className="min-h-screen w-full bg-[#0A0A0A] text-[#E5E5E5] font-sans flex flex-col overflow-x-hidden select-none" dir="rtl">
       <header className="h-24 flex items-center justify-between px-6 md:px-12 border-b border-white/5 shrink-0 relative z-50">
         <div className="flex items-center gap-4 cursor-pointer group" onClick={() => { setCurrentView('home'); setIsMobileMenuOpen(false); }}>
-          <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[#C5A059] transform group-hover:scale-105 transition-transform shadow-[0_0_15px_rgba(197,160,89,0.3)]">
-            <img 
-              src={logoImages[logoIndex]} 
-              alt="Logo" 
-              referrerPolicy="no-referrer"
-              className="w-full h-full object-cover transition-opacity duration-1000" 
-            />
+          <div className="relative w-12 h-12 flex items-center justify-center">
+            {/* Elegant Logo Icon */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-[#C5A059] to-[#E5C48B] rounded-sm rotate-45 group-hover:rotate-90 transition-transform duration-700 shadow-[0_0_20px_rgba(197,160,89,0.4)]"></div>
+            <div className="absolute inset-1 bg-[#0A0A0A] rounded-sm rotate-45 group-hover:rotate-90 transition-transform duration-700"></div>
+            <span className="relative z-10 font-serif text-[#C5A059] text-xl font-bold italic tracking-tighter">tng</span>
           </div>
-          <span className="text-xl font-serif tracking-[0.2em] uppercase text-white group-hover:text-[#C5A059] transition-colors">
-            {settings.siteName}
-          </span>
+          <div className="flex flex-col">
+            <span className="font-serif text-2xl font-medium tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-[#C5A059] to-white group-hover:via-white transition-all duration-1000">
+              tng Drive
+            </span>
+            <span className="text-[8px] uppercase tracking-[0.4em] text-[#C5A059] font-bold opacity-70 -mt-1">Luxury Car Rental</span>
+          </div>
         </div>
 
         {/* Desktop Nav */}
