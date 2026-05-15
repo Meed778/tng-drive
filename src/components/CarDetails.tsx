@@ -89,14 +89,14 @@ export function CarDetails({ car, onBack }: CarDetailsProps) {
               </span>
             </div>
             
-            <div className="relative w-full h-[300px] bg-white/5 rounded-sm overflow-hidden border border-white/5 mt-8 hidden md:block">
+            <div className="relative w-full h-[250px] md:h-[400px] bg-white/5 rounded-sm overflow-hidden border border-white/5 mt-8">
               <img src={car.imageUrl} alt={car.model} referrerPolicy="no-referrer" className="object-cover w-full h-full opacity-70" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] to-transparent"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-transparent to-transparent"></div>
             </div>
 
-            <h1 className="text-5xl md:text-[72px] font-serif leading-[1] text-white tracking-tight mt-4">
+            <h1 className="text-4xl md:text-[72px] font-serif leading-[1.1] text-white tracking-tight mt-6">
               {car.brand}<br />
-              <span className="italic font-light opacity-80 text-4xl md:text-[56px]">{car.model} {car.year}</span>
+              <span className="italic font-light opacity-80 text-3xl md:text-[56px]">{car.model} {car.year}</span>
             </h1>
             
             <div className="flex items-center gap-2 mt-2">

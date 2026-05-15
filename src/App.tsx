@@ -22,12 +22,19 @@ import { CarFront } from 'lucide-react';
 type ViewState = 'home' | 'fleet' | 'details' | 'admin-bookings' | 'admin-cars' | 'admin-analytics' | 'admin-settings' | 'admin-assistant';
 
 export default function App() {
-  const { user, profile, logout, login } = useAuth();
+  const { user, profile, logout, login, loading } = useAuth();
   const { settings } = useSettings();
   const [currentView, setCurrentView] = useState<ViewState>('home');
   const [selectedCarId, setSelectedCarId] = useState<string | null>(null);
+  const [authInitialized, setAuthInitialized] = useState(false);
   
   const [dbCars, setDbCars] = useState<Car[]>([]);
+
+  useEffect(() => {
+    if (!loading) {
+      setAuthInitialized(true);
+    }
+  }, [loading]);
 
   useEffect(() => {
     async function fetchCars() {
@@ -58,16 +65,29 @@ export default function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    if (isAdminMode) {
-      console.log("[AdminDebug] Checking access:", { isAdmin, user: user?.email, currentView });
-      
-      // If we are logged in as admin and in admin mode, force navigation to analytics if we are stuck on generic pages
-      if (isAdmin && (currentView === 'home' || currentView === 'fleet' || currentView === 'details')) {
-        console.log("[AdminDebug] Automating navigation to admin-analytics");
-        setCurrentView('admin-analytics');
-      }
+    if (!authInitialized) return;
+
+    // Handle Admin Mode Navigation
+    if (isAdminMode && isAdmin && !currentView.startsWith('admin-')) {
+      setCurrentView('admin-analytics');
     }
-  }, [isAdmin, isAdminMode, currentView, user?.email]);
+    
+    // Redirect non-admins away from admin views
+    if (!isAdmin && currentView.startsWith('admin-')) {
+      setCurrentView('home');
+    }
+  }, [isAdmin, isAdminMode, currentView, authInitialized]);
+
+  if (loading && !authInitialized) {
+    return (
+      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center font-serif text-[#C5A059]">
+        <div className="flex flex-col items-center gap-4">
+           <div className="w-16 h-16 border-2 border-[#C5A059] border-t-transparent rounded-full animate-spin"></div>
+           <div className="text-xl tracking-widest uppercase animate-pulse">Tangier Drive</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full bg-[#0A0A0A] text-[#E5E5E5] font-sans flex flex-col overflow-x-hidden select-none" dir="rtl">
@@ -129,17 +149,23 @@ export default function App() {
 
         {/* Mobile Menu Overlay */}
         {isMobileMenuOpen && (
-          <div className="fixed inset-0 top-24 bg-[#0A0A0A] z-40 flex flex-col p-8 gap-6 lg:hidden animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="fixed inset-0 top-24 bg-[#0A0A0A] z-40 flex flex-col p-8 gap-4 lg:hidden animate-in fade-in slide-in-from-top-4 duration-300 overflow-y-auto">
              <button onClick={() => { setCurrentView('home'); setIsMobileMenuOpen(false); }} className={`text-right py-4 border-b border-white/5 text-lg ${currentView === 'home' ? 'text-[#C5A059]' : 'text-white/70'}`}>الرئيسية</button>
              <button onClick={() => { setCurrentView('fleet'); setIsMobileMenuOpen(false); }} className={`text-right py-4 border-b border-white/5 text-lg ${currentView === 'fleet' ? 'text-[#C5A059]' : 'text-white/70'}`}>أسطول السيارات</button>
              
              {isAdmin && (
-               <>
-                 <button onClick={() => { setCurrentView('admin-analytics'); setIsMobileMenuOpen(false); }} className={`text-right py-4 border-b border-white/5 text-lg ${currentView.startsWith('admin-') ? 'text-[#C5A059]' : 'text-white/70'}`}>لوحة التحكم</button>
-               </>
+               <div className="flex flex-col gap-2 py-4 border-b border-white/5">
+                 <span className="text-right text-[10px] uppercase tracking-widest text-white/30 mb-2 font-bold px-1">لوحة التحكم</span>
+                 <div className="grid grid-cols-2 gap-2">
+                    <button onClick={() => { setCurrentView('admin-analytics'); setIsMobileMenuOpen(false); }} className={`text-right p-3 bg-white/5 rounded-sm text-sm ${currentView === 'admin-analytics' ? 'text-[#C5A059] border border-[#C5A059]/30' : 'text-white/70'}`}>الإحصائيات</button>
+                    <button onClick={() => { setCurrentView('admin-bookings'); setIsMobileMenuOpen(false); }} className={`text-right p-3 bg-white/5 rounded-sm text-sm ${currentView === 'admin-bookings' ? 'text-[#C5A059] border border-[#C5A059]/30' : 'text-white/70'}`}>الحجوزات</button>
+                    <button onClick={() => { setCurrentView('admin-cars'); setIsMobileMenuOpen(false); }} className={`text-right p-3 bg-white/5 rounded-sm text-sm ${currentView === 'admin-cars' ? 'text-[#C5A059] border border-[#C5A059]/30' : 'text-white/70'}`}>السيارات</button>
+                    <button onClick={() => { setCurrentView('admin-settings'); setIsMobileMenuOpen(false); }} className={`text-right p-3 bg-white/5 rounded-sm text-sm ${currentView === 'admin-settings' ? 'text-[#C5A059] border border-[#C5A059]/30' : 'text-white/70'}`}>الإعدادات</button>
+                 </div>
+               </div>
              )}
 
-             <div className="mt-auto flex flex-col gap-4">
+             <div className="mt-8 flex flex-col gap-4">
                 {user ? (
                   <>
                     <div className="text-white/30 text-xs text-center">{user.email}</div>
@@ -155,12 +181,17 @@ export default function App() {
 
       {/* Admin Sub-navigation (if in admin view) */}
       {isAdmin && currentView.startsWith('admin-') && (
-        <div className="h-12 bg-[#141414] border-b border-white/5 flex items-center px-6 md:px-12 gap-8 overflow-x-auto no-scrollbar scroll-smooth">
-           <button onClick={() => setCurrentView('admin-analytics')} className={`whitespace-nowrap text-[10px] font-bold tracking-widest uppercase transition-colors hover:text-white ${currentView === 'admin-analytics' ? 'text-[#C5A059]' : 'text-white/30'}`}>الإحصائيات</button>
-           <button onClick={() => setCurrentView('admin-bookings')} className={`whitespace-nowrap text-[10px] font-bold tracking-widest uppercase transition-colors hover:text-white ${currentView === 'admin-bookings' ? 'text-[#C5A059]' : 'text-white/30'}`}>الحجوزات</button>
-           <button onClick={() => setCurrentView('admin-cars')} className={`whitespace-nowrap text-[10px] font-bold tracking-widest uppercase transition-colors hover:text-white ${currentView === 'admin-cars' ? 'text-[#C5A059]' : 'text-white/30'}`}>السيارات</button>
-           <button onClick={() => setCurrentView('admin-assistant')} className={`whitespace-nowrap text-[10px] font-bold tracking-widest uppercase transition-colors hover:text-white ${currentView === 'admin-assistant' ? 'text-[#C5A059]' : 'text-white/30'}`}>المساعد</button>
-           <button onClick={() => setCurrentView('admin-settings')} className={`whitespace-nowrap text-[10px] font-bold tracking-widest uppercase transition-colors hover:text-white ${currentView === 'admin-settings' ? 'text-[#C5A059]' : 'text-white/30'}`}>الإعدادات</button>
+        <div className="relative h-12 bg-[#141414] border-b border-white/5 flex items-center shrink-0">
+          <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#141414] to-transparent z-10 pointer-events-none md:hidden"></div>
+          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#141414] to-transparent z-10 pointer-events-none md:hidden"></div>
+          
+          <div className="flex items-center px-6 md:px-12 gap-8 overflow-x-auto no-scrollbar scroll-smooth w-full">
+             <button onClick={() => setCurrentView('admin-analytics')} className={`whitespace-nowrap text-[10px] font-bold tracking-widest uppercase transition-colors hover:text-white py-4 ${currentView === 'admin-analytics' ? 'text-[#C5A059] border-b-2 border-[#C5A059]' : 'text-white/30'}`}>الإحصائيات</button>
+             <button onClick={() => setCurrentView('admin-bookings')} className={`whitespace-nowrap text-[10px] font-bold tracking-widest uppercase transition-colors hover:text-white py-4 ${currentView === 'admin-bookings' ? 'text-[#C5A059] border-b-2 border-[#C5A059]' : 'text-white/30'}`}>الحجوزات</button>
+             <button onClick={() => setCurrentView('admin-cars')} className={`whitespace-nowrap text-[10px] font-bold tracking-widest uppercase transition-colors hover:text-white py-4 ${currentView === 'admin-cars' ? 'text-[#C5A059] border-b-2 border-[#C5A059]' : 'text-white/30'}`}>السيارات</button>
+             <button onClick={() => setCurrentView('admin-assistant')} className={`whitespace-nowrap text-[10px] font-bold tracking-widest uppercase transition-colors hover:text-white py-4 ${currentView === 'admin-assistant' ? 'text-[#C5A059] border-b-2 border-[#C5A059]' : 'text-white/30'}`}>المساعد</button>
+             <button onClick={() => setCurrentView('admin-settings')} className={`whitespace-nowrap text-[10px] font-bold tracking-widest uppercase transition-colors hover:text-white py-4 ${currentView === 'admin-settings' ? 'text-[#C5A059] border-b-2 border-[#C5A059]' : 'text-white/30'}`}>الإعدادات</button>
+          </div>
         </div>
       )}
 
