@@ -74,6 +74,7 @@ export default function App() {
     setCurrentView('details');
   };
 
+  const isAdminMode = window.location.search.includes('admin') || window.location.hash.includes('admin');
   const isAdmin = profile?.isAdmin || user?.email === 'pimo1999loko@gmail.com';
 
   return (
@@ -84,6 +85,7 @@ export default function App() {
             <img 
               src={logoImages[logoIndex]} 
               alt="Logo" 
+              referrerPolicy="no-referrer"
               className="w-full h-full object-cover transition-opacity duration-1000" 
             />
           </div>
@@ -113,7 +115,7 @@ export default function App() {
           ) : (
             <button 
               onClick={login} 
-              className={`hover:text-white transition-opacity cursor-pointer border border-[#C5A059] px-4 py-2 text-[#C5A059] ${window.location.search.includes('admin') ? 'opacity-100' : 'opacity-0 hover:opacity-100'} w-8 h-8 rounded-full flex items-center justify-center p-0`}
+              className={`hover:text-white transition-all cursor-pointer border border-[#C5A059] px-4 py-2 text-[#C5A059] ${isAdminMode ? 'opacity-100 scale-110' : 'opacity-0 hover:opacity-100'} w-8 h-8 rounded-full flex items-center justify-center p-0`}
               title="Admin Login"
             >
               🔒

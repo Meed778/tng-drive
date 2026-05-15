@@ -24,7 +24,7 @@ export const cars: Car[] = [
     transmission: "أوتوماتيكي (9 سرعات)",
     caution: 50000,
     description: "فخامة وقوة لا مثيل لها. سيارة مرسيدس جي كلاس إصدار برابوس. تتميز بتصميم مهيب وتجهيزات رياضية خارقة، لتجربة قيادة لا تُنسى.",
-    imageUrl: "https://images.unsplash.com/photo-1520031441872-265e4ff70366?auto=format&fit=crop&q=80&w=1200"
+    imageUrl: "https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&q=80&w=1200"
   },
   {
     id: "touareg-006",
@@ -37,7 +37,7 @@ export const cars: Car[] = [
     transmission: "أوتوماتيكي (8 سرعات)",
     caution: 20000,
     description: "أناقة، رحابة، وأمان. سيارة عائلية فخمة توفر أقصى درجات الراحة والتكنولوجيا الحديثة، مثالية للرحلات الطويلة والمهمات اليومية.",
-    imageUrl: "https://images.unsplash.com/photo-1616186419513-397cf0461f36?auto=format&fit=crop&q=80&w=1200"
+    imageUrl: "https://images.unsplash.com/photo-1541443131876-44b03de101c5?auto=format&fit=crop&q=80&w=1200"
   },
   {
     id: "rangerover-velar-001",
@@ -50,7 +50,7 @@ export const cars: Car[] = [
     transmission: "أوتوماتيكي (8 سرعات)",
     caution: 15000,
     description: "الخيار الأمثل للرفاهية والقوة المطلقة في القيادة. توفير مريح، تصميم رياضي، ومساحة داخلية واسعة. مثالية للتجول في أرجاء طنجة واستكشاف الشمال بمستوى لا يضاهى من الراحة.",
-    imageUrl: "https://images.unsplash.com/photo-1606664515524-ed2f786a0b16?auto=format&fit=crop&q=80&w=1200"
+    imageUrl: "https://images.unsplash.com/photo-1621135802920-133df287f2a7?auto=format&fit=crop&q=80&w=1200"
   },
   {
     id: "clio-002",
@@ -63,7 +63,7 @@ export const cars: Car[] = [
     transmission: "يدوي",
     caution: 5000,
     description: "سيارة اقتصادية وعملية جداً، مثالية للقيادة داخل المدينة. استهلاك وقود منخفض جداً وسهولة في الركن.",
-    imageUrl: "https://images.unsplash.com/photo-1619682817481-e994891cd1f5?auto=format&fit=crop&q=80&w=1200"
+    imageUrl: "https://images.unsplash.com/photo-1542362567-b05261b60048?auto=format&fit=crop&q=80&w=1200"
   },
   {
     id: "dacia-logan-003",
@@ -76,7 +76,7 @@ export const cars: Car[] = [
     transmission: "يدوي",
     caution: 4000,
     description: "السيارة الأكثر شعبية في المغرب. واسعة، تتحمل الطرقات المختلفة، واقتصادية جداً.",
-    imageUrl: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=1200"
+    imageUrl: "https://images.unsplash.com/photo-1559416523-140dd3862b3a?auto=format&fit=crop&q=80&w=1200"
   },
   {
     id: "hyundai-tucson-004",

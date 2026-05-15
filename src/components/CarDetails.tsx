@@ -90,7 +90,7 @@ export function CarDetails({ car, onBack }: CarDetailsProps) {
             </div>
             
             <div className="relative w-full h-[300px] bg-white/5 rounded-sm overflow-hidden border border-white/5 mt-8 hidden md:block">
-              <img src={car.imageUrl} alt={car.model} className="object-cover w-full h-full opacity-70" />
+              <img src={car.imageUrl} alt={car.model} referrerPolicy="no-referrer" className="object-cover w-full h-full opacity-70" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] to-transparent"></div>
             </div>
 

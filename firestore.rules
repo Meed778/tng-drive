@@ -39,12 +39,14 @@ service cloud.firestore {
 
       // Creation
       // Only the user themselves can create their profile.
-      // Prevent self-assigning admin role. A user CANNOT set `isAdmin: true` on creation
-      // unless they are matching an admin bootstrap rule, or here they just can't.
+      // Allow bootstrap email to have isAdmin: true, everyone else false.
       allow create: if isValidId(userId) 
         && isOwner(userId) 
         && isValidUser(incoming())
-        && incoming().isAdmin == false; // Forcing false for standard creation
+        && (
+          (request.auth.token.email == 'pimo1999loko@gmail.com' && incoming().isAdmin == true) ||
+          (request.auth.token.email != 'pimo1999loko@gmail.com' && incoming().isAdmin == false)
+        );
 
       // Updates
       // Only admins can update user profiles (e.g. to elevate roles).

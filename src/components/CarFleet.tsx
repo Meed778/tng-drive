@@ -187,7 +187,7 @@ export function CarFleet({ onSelectCar, cars }: CarFleetProps) {
                 </div>
                 
                 <div className="w-full h-48 bg-white/5 mb-6 overflow-hidden flex items-center justify-center relative">
-                   <img src={car.imageUrl} alt={car.model} className="object-cover w-full h-full opacity-80 group-hover:opacity-100 transition-opacity group-hover:scale-105 duration-700" />
+                   <img src={car.imageUrl} alt={car.model} referrerPolicy="no-referrer" className="object-cover w-full h-full opacity-80 group-hover:opacity-100 transition-opacity group-hover:scale-105 duration-700" />
                    <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-transparent"></div>
                 </div>
               </div>

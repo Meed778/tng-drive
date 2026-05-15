@@ -186,7 +186,7 @@ export function AdminCars() {
                 />
                 {imageUrl && (
                   <div className="w-12 h-12 border border-[#C5A059]/30 rounded overflow-hidden flex-shrink-0 bg-white/5">
-                    <img src={imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                    <img src={imageUrl} alt="Preview" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                   </div>
                 )}
               </div>
@@ -215,7 +215,7 @@ export function AdminCars() {
           <div className="hidden md:flex items-center justify-center border-l border-white/5 pl-4">
             {imageUrl ? (
               <div className="w-full aspect-video border border-white/10 overflow-hidden relative group">
-                <img src={imageUrl} alt="preview" className="w-full h-full object-cover opacity-60" />
+                <img src={imageUrl} alt="preview" referrerPolicy="no-referrer" className="w-full h-full object-cover opacity-60" />
                 <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
                   <span className="text-[10px] uppercase tracking-widest text-white">معاينة مباشرة</span>
                 </div>
@@ -245,7 +245,7 @@ export function AdminCars() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {cars.map(c => (
             <div key={c.id} className="flex gap-4 border border-white/5 bg-[#0A0A0A] p-4 items-center">
-              <img src={c.imageUrl} alt={c.model} className="w-24 h-16 object-cover bg-white/5" />
+              <img src={c.imageUrl} alt={c.model} referrerPolicy="no-referrer" className="w-24 h-16 object-cover bg-white/5" />
               <div className="flex-1">
                 <h4 className="font-serif text-lg">{c.brand} {c.model}</h4>
                 <p className="text-xs text-white/50">{c.category} • {c.pricePerDay} درهم/يوم</p>
