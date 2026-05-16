@@ -60,6 +60,7 @@ export default function App() {
 
   useEffect(() => {
     async function fetchCars() {
+      if (dbCars.length > 0 && dbCars[0].id !== mockCars[0].id) return; // Already fetched from DB
       try {
         const snap = await getDocs(collection(db, 'cars'));
         if (snap.empty) {
@@ -72,7 +73,7 @@ export default function App() {
       }
     }
     fetchCars();
-  }, [currentView]);
+  }, []); // Only fetch once on mount
 
   const selectedCar = selectedCarId ? dbCars.find(c => c.id === selectedCarId) : null;
 
@@ -85,22 +86,23 @@ export default function App() {
   const isAdminMode = window.location.pathname.includes('admin') || window.location.search.includes('admin') || window.location.hash.includes('admin');
   const isAdmin = !!user && (user.email === 'pimo1999loko@gmail.com' || user.email === 'tangierdrive40@gmail.com' || profile?.isAdmin === true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [hasAutoNavigated, setHasAutoNavigated] = useState(false);
 
   useEffect(() => {
     if (!authInitialized) return;
 
-    // Handle Admin Mode Navigation
-    // If user specifically entered admin mode but isn't on an admin view, send them there
-    if (isAdminMode && isAdmin && !currentView.startsWith('admin-')) {
+    // Redirect logic: Only trigger auto-navigation once when auth is settled
+    if (isAdminMode && isAdmin && currentView === 'home' && !hasAutoNavigated) {
       setCurrentView('admin-analytics');
+      setHasAutoNavigated(true);
     }
     
-    // Redirect non-admins away from admin views immediately if they are unauthorized
+    // Redirect non-admins away from admin views
     if (currentView.startsWith('admin-') && !loading && !isAdmin) {
       console.log("[Auth] Unauthorized access to admin view, redirecting to home");
       setCurrentView('home');
     }
-  }, [isAdmin, isAdminMode, currentView, authInitialized, loading]);
+  }, [isAdmin, isAdminMode, authInitialized, loading, hasAutoNavigated, currentView]);
 
   if (loading && !authInitialized) {
     return (
@@ -173,7 +175,8 @@ export default function App() {
 
         {/* Mobile Menu Overlay */}
         {isMobileMenuOpen && (
-          <div className="fixed inset-0 top-24 bg-[#0A0A0A] z-40 flex flex-col p-8 gap-4 lg:hidden animate-in fade-in slide-in-from-top-4 duration-300 overflow-y-auto">
+          <div className="fixed inset-0 top-24 bg-[#0A0A0A]/95 backdrop-blur-md z-40 flex flex-col p-8 lg:hidden animate-in fade-in slide-in-from-top-4 duration-300 overflow-y-auto">
+             <div className="flex flex-col gap-2">
              <button onClick={() => { setCurrentView('home'); setIsMobileMenuOpen(false); }} className={`text-right py-4 border-b border-white/5 text-lg ${currentView === 'home' ? 'text-[#C5A059]' : 'text-white/70'}`}>الرئيسية</button>
              <button onClick={() => { setCurrentView('fleet'); setIsMobileMenuOpen(false); }} className={`text-right py-4 border-b border-white/5 text-lg ${currentView === 'fleet' ? 'text-[#C5A059]' : 'text-white/70'}`}>أسطول السيارات</button>
              
@@ -188,8 +191,9 @@ export default function App() {
                  </div>
                </div>
              )}
+           </div>
 
-             <div className="mt-8 flex flex-col gap-4">
+           <div className="mt-8 flex flex-col gap-4">
                 {user ? (
                   <>
                     <div className="text-white/30 text-xs text-center">{user.email}</div>
@@ -271,9 +275,14 @@ export default function App() {
         <div className="flex items-center gap-6">
           <button 
             onClick={() => {
-              const url = new URL(window.location.href);
-              url.searchParams.set('admin', 'true');
-              window.location.href = url.toString();
+              // Instead of a hard reload, we can just trigger the admin view if we're authorized
+              if (isAdmin) {
+                setCurrentView('admin-analytics');
+              } else {
+                const url = new URL(window.location.href);
+                url.searchParams.set('admin', 'true');
+                window.location.href = url.toString();
+              }
             }} 
             className="text-[8px] text-white/10 hover:text-white/30 transition-colors cursor-pointer"
           >
