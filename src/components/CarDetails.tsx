@@ -26,6 +26,9 @@ export function CarDetails({ car, onBack }: CarDetailsProps) {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+
+  const carImages = car.images && car.images.length > 0 ? car.images : [car.imageUrl];
 
   useEffect(() => {
     // Dynamic SEO Title
@@ -89,9 +92,47 @@ export function CarDetails({ car, onBack }: CarDetailsProps) {
               </span>
             </div>
             
-            <div className="relative w-full h-[250px] md:h-[400px] bg-white/5 rounded-sm overflow-hidden border border-white/5 mt-8">
-              <img src={car.imageUrl} alt={car.model} referrerPolicy="no-referrer" className="object-cover w-full h-full opacity-70" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-transparent to-transparent"></div>
+            <div className="relative w-full mt-8 flex flex-col gap-4">
+              <div className="relative w-full h-[250px] md:h-[400px] bg-white/5 rounded-sm overflow-hidden border border-white/5">
+                <img 
+                  src={carImages[activeImageIndex]} 
+                  alt={`${car.model} - view ${activeImageIndex + 1}`} 
+                  referrerPolicy="no-referrer" 
+                  className="object-cover w-full h-full opacity-70 transition-opacity duration-500" 
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-transparent to-transparent"></div>
+                
+                {carImages.length > 1 && (
+                  <>
+                    <button 
+                      onClick={() => setActiveImageIndex((prev) => (prev === 0 ? carImages.length - 1 : prev - 1))}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 text-[#C5A059] rounded-full hover:bg-[#C5A059] hover:text-[#0A0A0A] transition-all"
+                    >
+                      ←
+                    </button>
+                    <button 
+                      onClick={() => setActiveImageIndex((prev) => (prev === carImages.length - 1 ? 0 : prev + 1))}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 text-[#C5A059] rounded-full hover:bg-[#C5A059] hover:text-[#0A0A0A] transition-all"
+                    >
+                      →
+                    </button>
+                  </>
+                )}
+              </div>
+              
+              {carImages.length > 1 && (
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                  {carImages.map((img, idx) => (
+                    <button 
+                      key={idx} 
+                      onClick={() => setActiveImageIndex(idx)}
+                      className={`relative flex-shrink-0 w-20 h-14 border transition-all ${activeImageIndex === idx ? 'border-[#C5A059] opacity-100' : 'border-white/10 opacity-40 hover:opacity-70'}`}
+                    >
+                      <img src={img} alt="" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <h1 className="text-4xl md:text-[72px] font-serif leading-[1.1] text-white tracking-tight mt-6">

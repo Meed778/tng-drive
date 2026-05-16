@@ -51,6 +51,10 @@ export function useAuth() {
       if (err.code === 'auth/unauthorized-domain') {
         const currentDomain = window.location.hostname;
         console.error(`This domain (${currentDomain}) is not authorized in your Firebase project (tng-drive).`);
+        alert('خطأ: هذا النطاق غير مصرح به. يرجى إضافة النطاق الحالي إلى Authorized Domains في إعدادات Firebase.');
+      } else if (err.code === 'auth/operation-not-allowed') {
+        console.error("Google Sign-In is not enabled in Firebase Console.");
+        alert('خطأ: تسجيل الدخول عبر جوجل غير مفعل. يرجى تفعيل "Google" من قائمة Sign-in method في Firebase Console.');
       }
       throw err;
     }

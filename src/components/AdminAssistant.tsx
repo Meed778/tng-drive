@@ -1,41 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { GoogleGenAI, FunctionDeclaration } from '@google/genai';
 import { db, storage } from '../services/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-
-let genAI: GoogleGenAI | null = null;
-
-function getGeminiModel() {
-  if (!genAI) {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error('GEMINI_API_KEY is not set');
-    }
-    genAI = new GoogleGenAI({ apiKey });
-  }
-  return (genAI as any).getGenerativeModel({ model: "gemini-1.5-flash" });
-}
-
-const addCarFunctionDeclaration: FunctionDeclaration = {
-  name: "addCarToDatabase",
-  description: "Adds a new car to the rental database based on extracted details.",
-  parameters: {
-    type: "object" as any,
-    properties: {
-      brand: { type: "string" as any, description: "The brand of the car (e.g., Mercedes-Benz, BMW, Toyota)." },
-      model: { type: "string" as any, description: "The specific model of the car (e.g., G-Class, X5, Camry)." },
-      year: { type: "number" as any, description: "The manufacturing year of the car (e.g., 2024)." },
-      category: { type: "string" as any, description: "The category of the car (e.g., Luxury المتميزة, عائلية SUV, اقتصادية)." },
-      pricePerDay: { type: "number" as any, description: "The rental price per day in Moroccan Dirhams (MAD)." },
-      engine: { type: "string" as any, description: "The engine specification (e.g., V8 4.0L BiTurbo, V6 ديزل)." },
-      transmission: { type: "string" as any, description: "The transmission type (e.g., أوتوماتيكي, يدوي)." },
-      caution: { type: "number" as any, description: "The security deposit or caution amount in MAD." },
-      description: { type: "string" as any, description: "A highly marketing-focused description of the car in Arabic." },
-    },
-    required: ["brand", "model", "year", "category", "pricePerDay", "engine", "transmission", "caution", "description"],
-  },
-};
 
 type Message = {
   id: string;
@@ -133,19 +99,25 @@ export function AdminAssistant() {
 
       setMessages(prev => prev.map(m => m.id === loadingMsgId ? { ...m, text: 'جاري تحليل البيانات مع الذكاء الاصطناعي...' } : m));
 
-      const model = getGeminiModel();
-      const chat = model.startChat({
-        systemInstruction: "أنت مساعد ذكي لمدير تطبيق تأجير سيارات فخمة في المغرب. يمكنك اقتراح تفاصيل السيارات من الصور بدقة. أسماء الفئات هي: Luxury المتميزة، عائلية SUV، اقتصادية، رياضية. يجب عليك استخدام أداة addCarToDatabase إذا طلب منك ذلك أو إذا كان الهدف من المحادثة هو إضافة سيارة من صورة. اكتب وصفاً جذاباً للسيارات باللغة العربية.",
-        tools: [{ functionDeclarations: [addCarFunctionDeclaration] }]
+      // Use Server API instead of direct SDK
+      const response = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: parts,
+          history: messages.filter(m => !m.loading).map(m => ({
+            role: m.role === 'user' ? 'user' : 'model',
+            parts: [{ text: m.text }]
+          }))
+        })
       });
 
-      const result = await chat.sendMessage(parts);
-      const response = await result.response;
+      if (!response.ok) throw new Error("Failed to communicate with AI server");
       
-      let responseText = response.text() || '';
-      let carAdded = false;
+      const { text, functionCalls } = await response.json();
+      
+      let responseText = text || '';
 
-      const functionCalls = response.getFunctionCalls();
       if (functionCalls && functionCalls.length > 0) {
         for (const call of functionCalls) {
           if (call.name === "addCarToDatabase") {
@@ -163,11 +135,11 @@ export function AdminAssistant() {
               caution: args.caution || 0,
               description: args.description || "",
               imageUrl: finalImageUrl || "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&q=80&w=1200",
+              images: finalImageUrl ? [finalImageUrl] : [],
               createdAt: serverTimestamp()
             };
 
             await addDoc(collection(db, 'cars'), newCar);
-            carAdded = true;
             responseText = `تم إضافة السيارة بنجاح! \nالماركة: ${newCar.brand} ${newCar.model} \nالسعر: ${newCar.pricePerDay} درهم/يوم. \nهل هناك شيء آخر يمكنني المساعدة به؟`;
           }
         }

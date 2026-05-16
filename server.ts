@@ -3,6 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { createServer as createViteServer } from "vite";
 import { Resend } from "resend";
+import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -14,11 +15,102 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  app.use(express.json());
+  app.use(express.json({ limit: '10mb' }));
 
   const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+  const ai = process.env.GEMINI_API_KEY ? new GoogleGenAI({ 
+    apiKey: process.env.GEMINI_API_KEY,
+    httpOptions: {
+      headers: {
+        'User-Agent': 'aistudio-build',
+      }
+    }
+  }) : null;
 
   // API Routes
+  app.post("/api/ai/extract", async (req, res) => {
+    if (!ai) {
+      return res.status(500).json({ error: "Gemini API key not configured" });
+    }
+
+    try {
+      const { imageBase64, mimeType } = req.body;
+      
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: [{
+          parts: [
+            {
+              inlineData: {
+                mimeType: mimeType || "image/jpeg",
+                data: imageBase64
+              }
+            },
+            { text: "Extract car details from this image. Return JSON ONLY with keys: brand, model, year, category (one of: Luxury المتميزة, عائلية SUV, اقتصادية, رياضية), pricePerDay (estimate if not visible, e.g. 1000), engine, transmission (أوتوماتيكي or يدوي), caution (estimate, e.g. 5000), description (short marketing text in Arabic)." }
+          ]
+        }]
+      });
+
+      const responseText = response.text;
+      const jsonMatch = responseText?.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        return res.json(JSON.parse(jsonMatch[0]));
+      }
+      res.status(422).json({ error: "Could not extract structured data" });
+    } catch (err) {
+      console.error("AI Extraction Error:", err);
+      res.status(500).json({ error: "Failed to process image with AI" });
+    }
+  });
+
+  app.post("/api/ai/chat", async (req, res) => {
+    if (!ai) return res.status(500).json({ error: "Gemini API key not configured" });
+
+    try {
+      const { messages, history } = req.body;
+      
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: [
+          ...(history || []),
+          { role: 'user', parts: messages }
+        ],
+        config: {
+          systemInstruction: "أنت مساعد ذكي لمدير تطبيق تأجير سيارات فخمة في المغرب. يمكنك اقتراح تفاصيل السيارات من الصور بدقة. أسماء الفئات هي: Luxury المتميزة، عائلية SUV، اقتصادية، رياضية. يجب عليك استخدام أداة addCarToDatabase إذا طلب منك ذلك أو إذا كان الهدف من المحادثة هو إضافة سيارة من صورة. اكتب وصفاً جذاباً للسيارات باللغة العربية.",
+          tools: [{
+            functionDeclarations: [{
+              name: "addCarToDatabase",
+              description: "Adds a new car to the rental database based on extracted details.",
+              parameters: {
+                type: Type.OBJECT,
+                properties: {
+                  brand: { type: Type.STRING },
+                  model: { type: Type.STRING },
+                  year: { type: Type.NUMBER },
+                  category: { type: Type.STRING },
+                  pricePerDay: { type: Type.NUMBER },
+                  engine: { type: Type.STRING },
+                  transmission: { type: Type.STRING },
+                  caution: { type: Type.NUMBER },
+                  description: { type: Type.STRING },
+                },
+                required: ["brand", "model", "year", "category", "pricePerDay", "engine", "transmission", "caution", "description"],
+              },
+            }]
+          }]
+        }
+      });
+
+      const functionCalls = response.functionCalls;
+      const text = response.text;
+
+      res.json({ text, functionCalls });
+    } catch (err) {
+      console.error("AI Chat Error:", err);
+      res.status(500).json({ error: "Failed to process chat with AI" });
+    }
+  });
+
   app.post("/api/send-confirmation-email", async (req, res) => {
     const { customerEmail, customerName, carName, startDate, endDate, bookingId } = req.body;
 

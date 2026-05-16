@@ -27,7 +27,7 @@ export function AdminCars() {
   const [transmission, setTransmission] = useState('');
   const [caution, setCaution] = useState('');
   const [description, setDescription] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
 
   const fetchCars = async () => {
@@ -51,15 +51,17 @@ export function AdminCars() {
     e.preventDefault();
     setAdding(true);
     try {
-      if (!imageUrl) {
-        alert("يرجى توفير رابط أو اختيار صورة للسيارة");
+      if (imageUrls.length === 0) {
+        alert("يرجى توفير رابط أو اختيار صورة واحدة على الأقل للسيارة");
         return;
       }
 
       const newCar = {
         brand, model, year: parseInt(year), category, 
         pricePerDay: parseFloat(pricePerDay), engine, transmission, 
-        caution: parseFloat(caution), description, imageUrl,
+        caution: parseFloat(caution), description, 
+        imageUrl: imageUrls[0], // First image is thumbnail
+        images: imageUrls,
         createdAt: serverTimestamp()
       };
       const docRef = await addDoc(collection(db, 'cars'), newCar);
@@ -68,7 +70,7 @@ export function AdminCars() {
       // Reset
       setBrand(''); setModel(''); setYear(''); setCategory('');
       setPricePerDay(''); setEngine(''); setTransmission('');
-      setCaution(''); setDescription(''); setImageUrl('');
+      setCaution(''); setDescription(''); setImageUrls([]);
     } catch (err) {
       console.error("Error adding car", err);
     } finally {
@@ -77,23 +79,32 @@ export function AdminCars() {
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
     setIsUploading(true);
     try {
-      const storageRef = ref(storage, `cars/${Date.now()}_${file.name}`);
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
-      setImageUrl(url);
+      const newUrls: string[] = [];
       
-      // Auto-extract logic
-      if (confirm("هل تريد استخراج بيانات السيارة من هذه الصورة باستخدام الذكاء الاصطناعي؟")) {
-        handleAiExtract(file);
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const storageRef = ref(storage, `cars/${Date.now()}_${file.name}`);
+        await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(storageRef);
+        newUrls.push(url);
+        
+        // If it's the first file and we don't have images yet, consider AI extract
+        if (i === 0 && imageUrls.length === 0) {
+           if (confirm("هل تريد استخراج بيانات السيارة من هذه الصورة باستخدام الذكاء الاصطناعي؟")) {
+             handleAiExtract(file);
+           }
+        }
       }
+      
+      setImageUrls(prev => [...prev, ...newUrls]);
     } catch (err) {
       console.error("Error uploading file", err);
-      alert("فشل رفع الصورة، يرجى المحاولة مرة أخرى");
+      alert("فشل رفع الصور، يرجى المحاولة مرة أخرى");
     } finally {
       setIsUploading(false);
     }
@@ -172,63 +183,72 @@ export function AdminCars() {
         <input required type="number" placeholder="مبلغ الضمان Caution (درهم)" value={caution} onChange={e => setCaution(e.target.value)} className="bg-[#141414] border border-white/10 p-3 text-sm focus:border-[#C5A059] outline-none text-white" />
         <input required placeholder="المحرك (مثل: V6 ديزل)" value={engine} onChange={e => setEngine(e.target.value)} className="bg-[#141414] border border-white/10 p-3 text-sm focus:border-[#C5A059] outline-none text-white" />
         <input required placeholder="ناقل الحركة (أوتوماتيك / يدوي)" value={transmission} onChange={e => setTransmission(e.target.value)} className="bg-[#141414] border border-white/10 p-3 text-sm focus:border-[#C5A059] outline-none text-white" />
-        <div className="col-span-full grid grid-cols-1 md:grid-cols-2 gap-4 border border-white/5 p-4 rounded bg-[#141414]/50">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-xs uppercase text-white/40 tracking-wider mb-2">رابط صورة السيارة</label>
-              <div className="flex gap-4">
-                <input 
-                  placeholder="https://..." 
-                  value={imageUrl} 
-                  onChange={e => setImageUrl(e.target.value)} 
-                  className="flex-1 bg-[#141414] border border-white/10 p-3 text-sm focus:border-[#C5A059] outline-none text-white text-left" 
-                  dir="ltr" 
-                />
-                {imageUrl && (
-                  <div className="w-12 h-12 border border-[#C5A059]/30 rounded overflow-hidden flex-shrink-0 bg-white/5">
-                    <img src={imageUrl} alt="Preview" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
-                  </div>
-                )}
-              </div>
-            </div>
+        <div className="col-span-full border border-white/5 p-4 rounded bg-[#141414]/50">
+          <div className="mb-6">
+            <h4 className="text-[#C5A059] text-sm mb-4">صور السيارة (يمكنك إضافة عدة صور)</h4>
             
-            <div className="flex flex-col justify-center items-center py-4 border-t border-white/5">
-              <span className="text-white/30 text-xs mb-4">- أو رفع ملف مباشرة -</span>
-              <div className="relative w-full">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-6">
+              {imageUrls.map((url, idx) => (
+                <div key={idx} className="relative aspect-video border border-white/10 rounded overflow-hidden group">
+                  <img src={url} alt={`Preview ${idx}`} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                  <button 
+                    type="button"
+                    onClick={() => setImageUrls(imageUrls.filter((_, i) => i !== idx))}
+                    className="absolute top-1 left-1 p-1 bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X size={12} className="text-white" />
+                  </button>
+                  {idx === 0 && (
+                    <div className="absolute bottom-0 right-0 left-0 bg-[#C5A059] text-[#0A0A0A] text-[8px] font-bold text-center py-0.5 uppercase">
+                      الصورة الرئيسية
+                    </div>
+                  )}
+                </div>
+              ))}
+              
+              <label className="aspect-video border-2 border-dashed border-white/10 rounded flex flex-col items-center justify-center cursor-pointer hover:border-[#C5A059]/50 transition-colors">
                 <input 
                   type="file" 
+                  multiple 
                   accept="image/*"
                   onChange={handleFileChange} 
-                  disabled={isUploading}
-                  className="w-full text-sm text-white/70 file:mr-4 file:py-2 file:px-4 file:rounded-none file:border file:border-[#C5A059]/30 file:text-xs file:font-bold file:bg-[#C5A059]/10 file:text-[#C5A059] hover:file:bg-[#C5A059] hover:file:text-[#0A0A0A] file:transition-all cursor-pointer disabled:opacity-50" 
+                  className="hidden" 
                 />
-                {isUploading && (
-                  <div className="absolute inset-0 bg-[#0A0A0A]/50 flex items-center justify-center">
-                    <div className="w-4 h-4 border-2 border-[#C5A059]/20 border-t-[#C5A059] rounded-full animate-spin"></div>
+                <div className="text-center group">
+                  <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center mb-1 group-hover:bg-[#C5A059]/20 transition-colors">
+                    <span className="text-lg text-white/40">+</span>
                   </div>
-                )}
-              </div>
-              <p className="text-[10px] text-white/30 mt-2 uppercase tracking-widest">سيتم الرفع تلقائياً وتحديث الرابط</p>
+                  <p className="text-[10px] text-white/30 uppercase tracking-widest">إضافة صور</p>
+                </div>
+              </label>
             </div>
+
+            <div className="flex gap-4">
+              <input 
+                placeholder="أو أضف رابط صورة مباشرة: https://..." 
+                className="flex-1 bg-[#0A0A0A] border border-white/10 p-3 text-sm focus:border-[#C5A059] outline-none text-white text-left" 
+                dir="ltr" 
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const val = (e.target as HTMLInputElement).value;
+                    if (val && val.startsWith('http')) {
+                      setImageUrls([...imageUrls, val]);
+                      (e.target as HTMLInputElement).value = '';
+                    }
+                  }
+                }}
+              />
+            </div>
+            <p className="text-[10px] text-white/30 mt-2 uppercase tracking-widest">اضغط Enter لإضافة الرابط</p>
           </div>
           
-          <div className="hidden md:flex items-center justify-center border-l border-white/5 pl-4">
-            {imageUrl ? (
-              <div className="w-full aspect-video border border-white/10 overflow-hidden relative group">
-                <img src={imageUrl} alt="preview" referrerPolicy="no-referrer" className="w-full h-full object-cover opacity-60" />
-                <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="text-[10px] uppercase tracking-widest text-white">معاينة مباشرة</span>
-                </div>
-              </div>
-            ) : (
-              <div className="w-full aspect-video border border-dashed border-white/10 flex items-center justify-center text-white/20">
-                <div className="text-center">
-                  <p className="text-xs uppercase tracking-widest">لا توجد صورة</p>
-                  <p className="text-[10px] mt-1">أضف رابطاً أو ارفع ملفاً</p>
-                </div>
-              </div>
-            )}
-          </div>
+          {isUploading && (
+            <div className="flex items-center gap-2 text-[#C5A059] text-xs animate-pulse mb-4">
+              <div className="w-3 h-3 border border-[#C5A059]/50 border-t-[#C5A059] rounded-full animate-spin"></div>
+              <span>جاري رفع الصور...</span>
+            </div>
+          )}
         </div>
         
         <textarea required placeholder="وصف للسيارة ومميزاتها..." value={description} onChange={e => setDescription(e.target.value)} className="col-span-full bg-[#141414] border border-white/10 p-3 text-sm focus:border-[#C5A059] outline-none text-white h-24 resize-none" />

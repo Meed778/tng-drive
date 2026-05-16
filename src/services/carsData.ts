@@ -10,6 +10,7 @@ export interface Car {
   caution: number;
   description: string;
   imageUrl: string;
+  images?: string[];
 }
 
 export const cars: Car[] = [

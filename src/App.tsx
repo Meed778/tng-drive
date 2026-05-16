@@ -32,7 +32,7 @@ export default function App() {
     if (saved && (saved.startsWith('admin-') || saved === 'fleet' || saved === 'details')) {
       return saved as ViewState;
     }
-    return 'home';
+    return 'fleet';
   });
 
   useEffect(() => {
@@ -93,10 +93,8 @@ export default function App() {
         if (isAdmin) {
           setCurrentView('admin-analytics');
         }
-      } else if (hash === '#fleet') {
+      } else if (hash === '#fleet' || hash === '#home' || hash === '') {
         setCurrentView('fleet');
-      } else if (hash === '#home' || hash === '') {
-        setCurrentView('home');
       }
     };
 
@@ -111,15 +109,7 @@ export default function App() {
 
   // Sync currentView to Hash for better UX and Refresh handling
   useEffect(() => {
-    if (currentView === 'home') {
-      if (window.location.hash !== '' && window.location.hash !== '#home') {
-        // Only clear if it was a navigation hash we recognize
-        const recognizedHashes = ['#admin', '#fleet', '#details'];
-        if (recognizedHashes.includes(window.location.hash)) {
-           window.history.replaceState(null, '', ' ');
-        }
-      }
-    } else if (currentView === 'fleet') {
+    if (currentView === 'fleet' || currentView === 'home') {
       if (window.location.hash !== '#fleet') window.history.replaceState(null, '', '#fleet');
     } else if (currentView.startsWith('admin-')) {
       if (window.location.hash !== '#admin') window.history.replaceState(null, '', '#admin');
@@ -178,7 +168,7 @@ export default function App() {
   return (
     <div className="min-h-screen w-full bg-[#0A0A0A] text-[#E5E5E5] font-sans flex flex-col overflow-x-hidden select-none" dir="rtl">
       <header className="sticky top-0 h-20 md:h-24 flex items-center justify-between px-4 md:px-12 border-b border-white/5 shrink-0 z-50 bg-[#0A0A0A]/80 backdrop-blur-lg">
-        <div className="flex items-center gap-3 md:gap-4 cursor-pointer group" onClick={() => { setCurrentView('home'); setIsMobileMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+        <div className="flex items-center gap-3 md:gap-4 cursor-pointer group" onClick={() => { setCurrentView('fleet'); setIsMobileMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
           <div className="relative w-10 h-10 md:w-12 md:h-12 flex items-center justify-center">
             {/* Elegant Logo Icon */}
             <div className="absolute inset-0 bg-gradient-to-tr from-[#C5A059] to-[#E5C48B] rounded-sm rotate-45 group-hover:rotate-90 transition-transform duration-700 shadow-[0_0_20px_rgba(197,160,89,0.4)]"></div>
@@ -195,7 +185,6 @@ export default function App() {
 
         {/* Desktop Nav */}
         <nav className="hidden lg:flex items-center gap-10 text-[11px] font-bold tracking-[0.1em] text-white/50">
-          <button onClick={() => setCurrentView('home')} className={`hover:text-white transition-colors cursor-pointer ${currentView === 'home' ? 'text-[#C5A059] border-b border-[#C5A059] pb-1' : ''}`}>الرئيسية</button>
           <button onClick={() => setCurrentView('fleet')} className={`hover:text-white transition-colors cursor-pointer ${currentView === 'fleet' ? 'text-[#C5A059] border-b border-[#C5A059] pb-1' : ''}`}>أسطول السيارات</button>
           
           {isAdmin && (
@@ -237,7 +226,6 @@ export default function App() {
         {isMobileMenuOpen && (
           <div className="fixed inset-0 top-20 md:top-24 bg-[#0A0A0A]/95 backdrop-blur-md z-40 flex flex-col p-8 lg:hidden animate-in fade-in slide-in-from-top-4 duration-300 overflow-y-auto">
              <div className="flex flex-col gap-2">
-             <button onClick={() => { setCurrentView('home'); setIsMobileMenuOpen(false); }} className={`text-right py-4 border-b border-white/5 text-lg ${currentView === 'home' ? 'text-[#C5A059]' : 'text-white/70'}`}>الرئيسية</button>
              <button onClick={() => { setCurrentView('fleet'); setIsMobileMenuOpen(false); }} className={`text-right py-4 border-b border-white/5 text-lg ${currentView === 'fleet' ? 'text-[#C5A059]' : 'text-white/70'}`}>أسطول السيارات</button>
              
              {isAdmin && (
@@ -283,17 +271,13 @@ export default function App() {
         </div>
       )}
 
-      <main className={`flex-1 flex flex-col ${currentView === 'home' ? 'px-0 py-0' : 'px-6 md:px-12 py-12 md:py-16'} gap-16 lg:overflow-visible relative`}>
+      <main className={`flex-1 flex flex-col ${currentView.startsWith('admin-') || currentView === 'fleet' || currentView === 'details' ? 'px-6 md:px-12 py-12 md:py-16' : 'px-0 py-0'} gap-16 lg:overflow-visible relative`}>
         
         {currentView === 'home' && (
-          <>
-            <Hero siteName={settings.siteName} onExplore={() => setCurrentView('fleet')} />
-            {isAdminMode && !isAdmin && (
-              <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-[#C5A059] text-black px-6 py-2 rounded-full text-xs font-bold animate-bounce z-40 shadow-xl border-2 border-black">
-                يرجى تسجيل الدخول من الزر 🔒 في الأعلى للوصول للوحة التحكم
-              </div>
-            )}
-          </>
+          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-6">
+             <h2 className="text-[#C5A059] text-2xl font-serif mb-4">أهلاً بكم في TNG Drive</h2>
+             <button onClick={() => setCurrentView('fleet')} className="bg-[#C5A059] text-black px-8 py-3 font-bold uppercase tracking-widest text-xs">عرض أسطول السيارات</button>
+          </div>
         )}
 
         {currentView === 'fleet' && (
