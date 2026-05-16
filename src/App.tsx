@@ -24,6 +24,9 @@ type ViewState = 'home' | 'fleet' | 'details' | 'admin-bookings' | 'admin-cars' 
 export default function App() {
   const { user, profile, logout, login, loading } = useAuth();
   const { settings } = useSettings();
+  
+  const isAdmin = !!user && (user.email === 'pimo1999loko@gmail.com' || user.email === 'tangierdrive40@gmail.com' || profile?.isAdmin === true);
+
   const [currentView, setCurrentView] = useState<ViewState>(() => {
     const saved = localStorage.getItem('tng-drive-view');
     if (saved && (saved.startsWith('admin-') || saved === 'fleet' || saved === 'details')) {
@@ -82,9 +85,66 @@ export default function App() {
     setCurrentView('details');
   };
 
-  // Improved Admin Detection
-  const isAdminMode = window.location.pathname.includes('admin') || window.location.search.includes('admin') || window.location.hash.includes('admin');
-  const isAdmin = !!user && (user.email === 'pimo1999loko@gmail.com' || user.email === 'tangierdrive40@gmail.com' || profile?.isAdmin === true);
+  // Listen for hash changes
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash === '#admin') {
+        if (isAdmin) {
+          setCurrentView('admin-analytics');
+        }
+      } else if (hash === '#fleet') {
+        setCurrentView('fleet');
+      } else if (hash === '#home' || hash === '') {
+        setCurrentView('home');
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    // Initial check
+    if (window.location.hash === '#admin' && isAdmin) {
+      setCurrentView('admin-analytics');
+    }
+
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [isAdmin]);
+
+  // Sync currentView to Hash for better UX and Refresh handling
+  useEffect(() => {
+    if (currentView === 'home') {
+      if (window.location.hash !== '' && window.location.hash !== '#home') {
+        // Only clear if it was a navigation hash we recognize
+        const recognizedHashes = ['#admin', '#fleet', '#details'];
+        if (recognizedHashes.includes(window.location.hash)) {
+           window.history.replaceState(null, '', ' ');
+        }
+      }
+    } else if (currentView === 'fleet') {
+      if (window.location.hash !== '#fleet') window.history.replaceState(null, '', '#fleet');
+    } else if (currentView.startsWith('admin-')) {
+      if (window.location.hash !== '#admin') window.history.replaceState(null, '', '#admin');
+    }
+  }, [currentView]);
+
+  // Reactive Admin Mode Detection
+  const [isAdminMode, setIsAdminMode] = useState(() => 
+    window.location.pathname.includes('admin') || window.location.search.includes('admin') || window.location.hash.includes('admin')
+  );
+
+  useEffect(() => {
+    const checkAdminMode = () => {
+      const isMode = window.location.pathname.includes('admin') || window.location.search.includes('admin') || window.location.hash.includes('admin');
+      setIsAdminMode(isMode);
+    };
+
+    window.addEventListener('hashchange', checkAdminMode);
+    window.addEventListener('popstate', checkAdminMode);
+    return () => {
+      window.removeEventListener('hashchange', checkAdminMode);
+      window.removeEventListener('popstate', checkAdminMode);
+    };
+  }, []);
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [hasAutoNavigated, setHasAutoNavigated] = useState(false);
 
@@ -98,7 +158,7 @@ export default function App() {
     }
     
     // Redirect non-admins away from admin views
-    if (currentView.startsWith('admin-') && !loading && !isAdmin) {
+    if (currentView.startsWith('admin-') && !loading && !isAdmin && authInitialized) {
       console.log("[Auth] Unauthorized access to admin view, redirecting to home");
       setCurrentView('home');
     }
@@ -117,8 +177,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen w-full bg-[#0A0A0A] text-[#E5E5E5] font-sans flex flex-col overflow-x-hidden select-none" dir="rtl">
-      <header className="h-24 flex items-center justify-between px-4 md:px-12 border-b border-white/5 shrink-0 relative z-50">
-        <div className="flex items-center gap-3 md:gap-4 cursor-pointer group" onClick={() => { setCurrentView('home'); setIsMobileMenuOpen(false); }}>
+      <header className="sticky top-0 h-20 md:h-24 flex items-center justify-between px-4 md:px-12 border-b border-white/5 shrink-0 z-50 bg-[#0A0A0A]/80 backdrop-blur-lg">
+        <div className="flex items-center gap-3 md:gap-4 cursor-pointer group" onClick={() => { setCurrentView('home'); setIsMobileMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
           <div className="relative w-10 h-10 md:w-12 md:h-12 flex items-center justify-center">
             {/* Elegant Logo Icon */}
             <div className="absolute inset-0 bg-gradient-to-tr from-[#C5A059] to-[#E5C48B] rounded-sm rotate-45 group-hover:rotate-90 transition-transform duration-700 shadow-[0_0_20px_rgba(197,160,89,0.4)]"></div>
@@ -175,7 +235,7 @@ export default function App() {
 
         {/* Mobile Menu Overlay */}
         {isMobileMenuOpen && (
-          <div className="fixed inset-0 top-24 bg-[#0A0A0A]/95 backdrop-blur-md z-40 flex flex-col p-8 lg:hidden animate-in fade-in slide-in-from-top-4 duration-300 overflow-y-auto">
+          <div className="fixed inset-0 top-20 md:top-24 bg-[#0A0A0A]/95 backdrop-blur-md z-40 flex flex-col p-8 lg:hidden animate-in fade-in slide-in-from-top-4 duration-300 overflow-y-auto">
              <div className="flex flex-col gap-2">
              <button onClick={() => { setCurrentView('home'); setIsMobileMenuOpen(false); }} className={`text-right py-4 border-b border-white/5 text-lg ${currentView === 'home' ? 'text-[#C5A059]' : 'text-white/70'}`}>الرئيسية</button>
              <button onClick={() => { setCurrentView('fleet'); setIsMobileMenuOpen(false); }} className={`text-right py-4 border-b border-white/5 text-lg ${currentView === 'fleet' ? 'text-[#C5A059]' : 'text-white/70'}`}>أسطول السيارات</button>
@@ -209,7 +269,7 @@ export default function App() {
 
       {/* Admin Sub-navigation (if in admin view) */}
       {isAdmin && currentView.startsWith('admin-') && (
-        <div className="relative h-12 bg-[#141414] border-b border-white/5 flex items-center shrink-0">
+        <div className="sticky top-20 md:top-24 h-12 bg-[#141414] border-b border-white/5 flex items-center shrink-0 z-40">
           <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#141414] to-transparent z-10 pointer-events-none md:hidden"></div>
           <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#141414] to-transparent z-10 pointer-events-none md:hidden"></div>
           
@@ -239,9 +299,25 @@ export default function App() {
         {currentView === 'fleet' && (
            <CarFleet cars={dbCars} onSelectCar={navigateToDetails} />
         )}
-
-        {currentView === 'details' && selectedCar && (
-          <CarDetails car={selectedCar} onBack={() => setCurrentView('fleet')} />
+        
+        {currentView === 'details' && (
+           <>
+             {!selectedCar && dbCars.length > 0 ? (
+               // Fallback if car not found
+               <div className="flex flex-col items-center justify-center py-20 text-white/50">
+                 <p className="mb-4">عذراً، لم يتم العثور على السيارة.</p>
+                 <button onClick={() => setCurrentView('fleet')} className="text-[#C5A059] border border-[#C5A059] px-6 py-2">العودة للأسطول</button>
+               </div>
+             ) : !selectedCar ? (
+               // Loading state for specific car
+               <div className="flex flex-col items-center justify-center py-20 animate-pulse text-[#C5A059]">
+                 <div className="w-12 h-12 border-2 border-[#C5A059] border-t-transparent rounded-full animate-spin mb-4"></div>
+                 <p>جاري تحميل تفاصيل السيارة...</p>
+               </div>
+             ) : (
+               <CarDetails car={selectedCar} onBack={() => setCurrentView('fleet')} />
+             )}
+           </>
         )}
 
         {currentView === 'admin-bookings' && isAdmin && (
@@ -275,13 +351,20 @@ export default function App() {
         <div className="flex items-center gap-6">
           <button 
             onClick={() => {
-              // Instead of a hard reload, we can just trigger the admin view if we're authorized
               if (isAdmin) {
                 setCurrentView('admin-analytics');
-              } else {
+              } else if (!isAdminMode) {
+                // If not in admin mode, add the trigger to URL but try to just set state if possible
+                // Actually, adding ?admin=true is a good hint for the login button to show up
                 const url = new URL(window.location.href);
                 url.searchParams.set('admin', 'true');
-                window.location.href = url.toString();
+                window.history.pushState({}, '', url.toString());
+                // Force a re-calculation of isAdminMode if needed, or just use a state
+                // For now, simple state change is better
+                setCurrentView('home'); 
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              } else {
+                login();
               }
             }} 
             className="text-[8px] text-white/10 hover:text-white/30 transition-colors cursor-pointer"

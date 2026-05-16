@@ -142,7 +142,10 @@ export function BookingCalendar({ carId, pricePerDay, carName }: BookingCalendar
       {/* Custom styles to force dark mode support into react-day-picker if needed */}
       <style>{`
         .rdp {
-          --rdp-cell-size: 40px;
+          --rdp-cell-size: 36px;
+          @media (min-width: 768px) {
+            --rdp-cell-size: 44px;
+          }
           --rdp-accent-color: #C5A059;
           --rdp-background-color: #1a1a1a;
           --rdp-accent-color-dark: #C5A059;
