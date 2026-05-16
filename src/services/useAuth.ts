@@ -43,7 +43,18 @@ export function useAuth() {
     });
   }, []);
 
-  const login = () => signInWithPopup(auth, new GoogleAuthProvider());
+  const login = async () => {
+    try {
+      await signInWithPopup(auth, new GoogleAuthProvider());
+    } catch (err: any) {
+      if (err.code === 'auth/unauthorized-domain') {
+        alert('خطأ: هذا النطاق (Domain) غير مصرح به في Firebase. يرجى إضافة meed778.github.io إلى قائمة Authorized Domains في إعدادات Firebase Authentication.');
+      } else {
+        console.error("Login error:", err);
+      }
+      throw err;
+    }
+  };
   const logout = () => signOut(auth);
 
   return { user, profile, loading, login, logout };

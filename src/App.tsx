@@ -359,8 +359,7 @@ export default function App() {
                 const url = new URL(window.location.href);
                 url.searchParams.set('admin', 'true');
                 window.history.pushState({}, '', url.toString());
-                // Force a re-calculation of isAdminMode if needed, or just use a state
-                // For now, simple state change is better
+                setIsAdminMode(true);
                 setCurrentView('home'); 
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               } else {
