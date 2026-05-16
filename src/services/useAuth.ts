@@ -47,10 +47,10 @@ export function useAuth() {
     try {
       await signInWithPopup(auth, new GoogleAuthProvider());
     } catch (err: any) {
+      console.error("Login error:", err);
       if (err.code === 'auth/unauthorized-domain') {
-        alert('خطأ: هذا النطاق (Domain) غير مصرح به في Firebase. يرجى إضافة meed778.github.io إلى قائمة Authorized Domains في إعدادات Firebase Authentication.');
-      } else {
-        console.error("Login error:", err);
+        const currentDomain = window.location.hostname;
+        console.error(`This domain (${currentDomain}) is not authorized in your Firebase project (tng-drive).`);
       }
       throw err;
     }
