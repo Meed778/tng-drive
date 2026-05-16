@@ -24,8 +24,30 @@ type ViewState = 'home' | 'fleet' | 'details' | 'admin-bookings' | 'admin-cars' 
 export default function App() {
   const { user, profile, logout, login, loading } = useAuth();
   const { settings } = useSettings();
-  const [currentView, setCurrentView] = useState<ViewState>('home');
-  const [selectedCarId, setSelectedCarId] = useState<string | null>(null);
+  const [currentView, setCurrentView] = useState<ViewState>(() => {
+    const saved = localStorage.getItem('tng-drive-view');
+    if (saved && (saved.startsWith('admin-') || saved === 'fleet' || saved === 'details')) {
+      return saved as ViewState;
+    }
+    return 'home';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('tng-drive-view', currentView);
+  }, [currentView]);
+
+  const [selectedCarId, setSelectedCarId] = useState<string | null>(() => {
+    return localStorage.getItem('tng-drive-selected-car');
+  });
+
+  useEffect(() => {
+    if (selectedCarId) {
+      localStorage.setItem('tng-drive-selected-car', selectedCarId);
+    } else {
+      localStorage.removeItem('tng-drive-selected-car');
+    }
+  }, [selectedCarId]);
+
   const [authInitialized, setAuthInitialized] = useState(false);
   
   const [dbCars, setDbCars] = useState<Car[]>([]);
@@ -41,7 +63,6 @@ export default function App() {
       try {
         const snap = await getDocs(collection(db, 'cars'));
         if (snap.empty) {
-          // Fallback to mock data visually if DB is empty, without attempting to write to it (which causes permission errors for normal users)
           setDbCars(mockCars);
         } else {
           setDbCars(snap.docs.map(d => ({ id: d.id, ...d.data() } as Car)));
@@ -60,6 +81,7 @@ export default function App() {
     setCurrentView('details');
   };
 
+  // Improved Admin Detection
   const isAdminMode = window.location.pathname.includes('admin') || window.location.search.includes('admin') || window.location.hash.includes('admin');
   const isAdmin = !!user && (user.email === 'pimo1999loko@gmail.com' || user.email === 'tangierdrive40@gmail.com' || profile?.isAdmin === true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -68,15 +90,17 @@ export default function App() {
     if (!authInitialized) return;
 
     // Handle Admin Mode Navigation
+    // If user specifically entered admin mode but isn't on an admin view, send them there
     if (isAdminMode && isAdmin && !currentView.startsWith('admin-')) {
       setCurrentView('admin-analytics');
     }
     
-    // Redirect non-admins away from admin views
-    if (!isAdmin && currentView.startsWith('admin-')) {
+    // Redirect non-admins away from admin views immediately if they are unauthorized
+    if (currentView.startsWith('admin-') && !loading && !isAdmin) {
+      console.log("[Auth] Unauthorized access to admin view, redirecting to home");
       setCurrentView('home');
     }
-  }, [isAdmin, isAdminMode, currentView, authInitialized]);
+  }, [isAdmin, isAdminMode, currentView, authInitialized, loading]);
 
   if (loading && !authInitialized) {
     return (
@@ -91,19 +115,19 @@ export default function App() {
 
   return (
     <div className="min-h-screen w-full bg-[#0A0A0A] text-[#E5E5E5] font-sans flex flex-col overflow-x-hidden select-none" dir="rtl">
-      <header className="h-24 flex items-center justify-between px-6 md:px-12 border-b border-white/5 shrink-0 relative z-50">
-        <div className="flex items-center gap-4 cursor-pointer group" onClick={() => { setCurrentView('home'); setIsMobileMenuOpen(false); }}>
-          <div className="relative w-12 h-12 flex items-center justify-center">
+      <header className="h-24 flex items-center justify-between px-4 md:px-12 border-b border-white/5 shrink-0 relative z-50">
+        <div className="flex items-center gap-3 md:gap-4 cursor-pointer group" onClick={() => { setCurrentView('home'); setIsMobileMenuOpen(false); }}>
+          <div className="relative w-10 h-10 md:w-12 md:h-12 flex items-center justify-center">
             {/* Elegant Logo Icon */}
             <div className="absolute inset-0 bg-gradient-to-tr from-[#C5A059] to-[#E5C48B] rounded-sm rotate-45 group-hover:rotate-90 transition-transform duration-700 shadow-[0_0_20px_rgba(197,160,89,0.4)]"></div>
             <div className="absolute inset-1 bg-[#0A0A0A] rounded-sm rotate-45 group-hover:rotate-90 transition-transform duration-700"></div>
-            <span className="relative z-10 font-serif text-[#C5A059] text-xl font-bold italic tracking-tighter">tng</span>
+            <span className="relative z-10 font-serif text-[#C5A059] text-lg md:text-xl font-bold italic tracking-tighter">tng</span>
           </div>
           <div className="flex flex-col">
-            <span className="font-serif text-2xl font-medium tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-[#C5A059] to-white group-hover:via-white transition-all duration-1000">
+            <span className="font-serif text-lg md:text-2xl font-medium tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-[#C5A059] to-white group-hover:via-white transition-all duration-1000">
               tng Drive
             </span>
-            <span className="text-[8px] uppercase tracking-[0.4em] text-[#C5A059] font-bold opacity-70 -mt-1">Luxury Car Rental</span>
+            <span className="text-[7px] md:text-[8px] uppercase tracking-[0.4em] text-[#C5A059] font-bold opacity-70 -mt-0.5 md:-mt-1 whitespace-nowrap">Luxury Car Rental</span>
           </div>
         </div>
 
