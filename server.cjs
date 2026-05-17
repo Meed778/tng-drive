@@ -36,7 +36,7 @@ var __dirname = import_path.default.dirname(__filename);
 async function startServer() {
   const app = (0, import_express.default)();
   const PORT = 3e3;
-  app.use(import_express.default.json({ limit: "10mb" }));
+  app.use(import_express.default.json({ limit: "50mb" }));
   const resend = process.env.RESEND_API_KEY ? new import_resend.Resend(process.env.RESEND_API_KEY) : null;
   const ai = process.env.GEMINI_API_KEY ? new import_genai.GoogleGenAI({
     apiKey: process.env.GEMINI_API_KEY,
