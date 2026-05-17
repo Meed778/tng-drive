@@ -5,6 +5,7 @@ import { createServer as createViteServer } from "vite";
 import { Resend } from "resend";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
+import cors from "cors";
 
 dotenv.config();
 
@@ -15,7 +16,23 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
+  app.use(cors()); // Allow all origins
+  app.use((req, res, next) => {
+    res.setHeader("Cross-Origin-Opener-Policy", "unsafe-none");
+    res.setHeader("Cross-Origin-Embedder-Policy", "unsafe-none");
+    next();
+  });
   app.use(express.json({ limit: '50mb' }));
+
+  app.get("/api/health", (req, res) => {
+    res.json({ 
+      status: "ok", 
+      env: {
+        hasGemini: !!process.env.GEMINI_API_KEY,
+        hasResend: !!process.env.RESEND_API_KEY
+      }
+    });
+  });
 
   const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
   const ai = process.env.GEMINI_API_KEY ? new GoogleGenAI({ 

@@ -1,4 +1,4 @@
-export const resizeImage = (file: File, maxWidth = 1200, maxHeight = 1200): Promise<Blob> => {
+export const resizeImage = (file: File, maxWidth = 1000, maxHeight = 1000): Promise<Blob> => {
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -30,7 +30,7 @@ export const resizeImage = (file: File, maxWidth = 1200, maxHeight = 1200): Prom
         canvas.toBlob((blob) => {
           if (blob) resolve(blob);
           else resolve(file);
-        }, file.type, 0.85);
+        }, "image/jpeg", 0.7); // Use jpeg and lower quality for better speed
       };
     };
   });

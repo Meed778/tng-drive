@@ -12,14 +12,13 @@ import { AdminBookings } from './components/AdminBookings';
 import { AdminCars } from './components/AdminCars';
 import { AdminAnalytics } from './components/AdminAnalytics';
 import { AdminSettings } from './components/AdminSettings';
-import { AdminAssistant } from './components/AdminAssistant';
 import { Hero } from './components/Hero';
 import { CarFleet } from './components/CarFleet';
 import { CarDetails } from './components/CarDetails';
 import { cars as mockCars, Car } from './services/carsData';
 import { CarFront } from 'lucide-react';
 
-type ViewState = 'home' | 'fleet' | 'details' | 'admin-bookings' | 'admin-cars' | 'admin-analytics' | 'admin-settings' | 'admin-assistant';
+type ViewState = 'home' | 'fleet' | 'details' | 'admin-bookings' | 'admin-cars' | 'admin-analytics' | 'admin-settings';
 
 export default function App() {
   const { user, profile, logout, login, loading } = useAuth();
@@ -269,7 +268,6 @@ export default function App() {
              <button onClick={() => setCurrentView('admin-analytics')} className={`whitespace-nowrap text-[10px] font-bold tracking-widest uppercase transition-colors hover:text-white py-4 ${currentView === 'admin-analytics' ? 'text-[#C5A059] border-b-2 border-[#C5A059]' : 'text-white/30'}`}>الإحصائيات</button>
              <button onClick={() => setCurrentView('admin-bookings')} className={`whitespace-nowrap text-[10px] font-bold tracking-widest uppercase transition-colors hover:text-white py-4 ${currentView === 'admin-bookings' ? 'text-[#C5A059] border-b-2 border-[#C5A059]' : 'text-white/30'}`}>الحجوزات</button>
              <button onClick={() => setCurrentView('admin-cars')} className={`whitespace-nowrap text-[10px] font-bold tracking-widest uppercase transition-colors hover:text-white py-4 ${currentView === 'admin-cars' ? 'text-[#C5A059] border-b-2 border-[#C5A059]' : 'text-white/30'}`}>السيارات</button>
-             <button onClick={() => setCurrentView('admin-assistant')} className={`whitespace-nowrap text-[10px] font-bold tracking-widest uppercase transition-colors hover:text-white py-4 ${currentView === 'admin-assistant' ? 'text-[#C5A059] border-b-2 border-[#C5A059]' : 'text-white/30'}`}>المساعد</button>
              <button onClick={() => setCurrentView('admin-settings')} className={`whitespace-nowrap text-[10px] font-bold tracking-widest uppercase transition-colors hover:text-white py-4 ${currentView === 'admin-settings' ? 'text-[#C5A059] border-b-2 border-[#C5A059]' : 'text-white/30'}`}>الإعدادات</button>
           </div>
         </div>
@@ -315,10 +313,6 @@ export default function App() {
 
         {currentView === 'admin-settings' && isAdmin && (
            <AdminSettings />
-        )}
-
-        {currentView === 'admin-assistant' && isAdmin && (
-           <AdminAssistant />
         )}
 
       </main>

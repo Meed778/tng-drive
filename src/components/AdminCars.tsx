@@ -3,8 +3,7 @@ import { collection, getDocs, addDoc, deleteDoc, doc, serverTimestamp } from 'fi
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../services/firebase';
 import { Car } from '../services/carsData';
-import { Trash2, AlertTriangle, X, Sparkles } from 'lucide-react';
-import { extractCarDataFromImage } from '../services/geminiService';
+import { Trash2, AlertTriangle, X } from 'lucide-react';
 import { resizeImage } from '../lib/imageUtils';
 
 export function AdminCars() {
@@ -29,7 +28,6 @@ export function AdminCars() {
   const [caution, setCaution] = useState('');
   const [description, setDescription] = useState('');
   const [imageUrls, setImageUrls] = useState<string[]>([]);
-  const [isAiLoading, setIsAiLoading] = useState(false);
 
   const fetchCars = async () => {
     setLoading(true);
@@ -87,14 +85,6 @@ export function AdminCars() {
     setIsUploading(true);
     
     try {
-      // If first upload and user wants AI extract
-      if (imageUrls.length === 0) {
-        if (confirm("هل تريد استخراج بيانات السيارة من الصورة الأولى باستخدام الذكاء الاصطناعي؟")) {
-          // Trigger AI extraction in parallel with upload
-          handleAiExtract(filesArray[0]);
-        }
-      }
-
       const uploadPromises = filesArray.map(async (file) => {
         try {
           const storageRef = ref(storage, `cars/${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name}`);
@@ -117,29 +107,6 @@ export function AdminCars() {
       alert(err.message || "فشل رفع بعض أو كل الصور، يرجى المحاولة مرة أخرى");
     } finally {
       setIsUploading(false);
-    }
-  };
-
-  const handleAiExtract = async (file: File) => {
-    setIsAiLoading(true);
-    try {
-      const data = await extractCarDataFromImage(file);
-      if (data) {
-        setBrand(data.brand || '');
-        setModel(data.model || '');
-        setYear(data.year?.toString() || '');
-        setCategory(data.category || '');
-        setPricePerDay(data.pricePerDay?.toString() || '');
-        setEngine(data.engine || '');
-        setTransmission(data.transmission || '');
-        setCaution(data.caution?.toString() || '');
-        setDescription(data.description || '');
-      }
-    } catch (err) {
-      console.error("AI Extraction failed", err);
-      alert("فشل استخراج البيانات. يرجى ملء الحقول يدوياً.");
-    } finally {
-      setIsAiLoading(false);
     }
   };
 
@@ -169,16 +136,6 @@ export function AdminCars() {
         <div>
           <h2 className="text-3xl font-serif text-[#C5A059] mb-2">إدارة أسطول السيارات</h2>
           <p className="text-white/50 text-sm">إضافة وإزالة السيارات المتاحة للتأجير</p>
-        </div>
-        <div className="flex gap-4">
-          <button 
-            type="button" 
-            onClick={() => document.getElementById('ai-assistant-tab-trigger')?.click()}
-            className="flex items-center gap-2 px-4 py-2 bg-[#C5A059]/10 border border-[#C5A059]/30 text-[#C5A059] text-[10px] font-bold uppercase tracking-widest hover:bg-[#C5A059] hover:text-[#0A0A0A] transition-all rounded-full"
-          >
-            <Sparkles size={14} />
-            استعن بالمساعد الذكي
-          </button>
         </div>
       </div>
 
@@ -263,9 +220,9 @@ export function AdminCars() {
         
         <textarea required placeholder="وصف للسيارة ومميزاتها..." value={description} onChange={e => setDescription(e.target.value)} className="col-span-full bg-[#141414] border border-white/10 p-3 text-sm focus:border-[#C5A059] outline-none text-white h-24 resize-none" />
         
-        <button type="submit" disabled={adding || isAiLoading || isUploading} className="col-span-full bg-[#C5A059] text-[#0A0A0A] font-bold py-3 hover:bg-white transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-          {adding ? 'جاري الإضافة...' : (isAiLoading ? 'جاري تحليل الصورة بالذكاء الاصطناعي...' : (isUploading ? 'جاري رفع الصور...' : 'حفظ السيارة في الأسطول'))}
-          {(isAiLoading || adding || isUploading) && <div className="w-4 h-4 border-2 border-[#0A0A0A]/20 border-t-[#0A0A0A] rounded-full animate-spin"></div>}
+        <button type="submit" disabled={adding || isUploading} className="col-span-full bg-[#C5A059] text-[#0A0A0A] font-bold py-3 hover:bg-white transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+          {adding ? 'جاري الإضافة...' : (isUploading ? 'جاري رفع الصور...' : 'حفظ السيارة في الأسطول')}
+          {(adding || isUploading) && <div className="w-4 h-4 border-2 border-[#0A0A0A]/20 border-t-[#0A0A0A] rounded-full animate-spin"></div>}
         </button>
       </form>
 
