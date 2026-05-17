@@ -29,6 +29,7 @@ var import_vite = require("vite");
 var import_resend = require("resend");
 var import_genai = require("@google/genai");
 var import_dotenv = __toESM(require("dotenv"), 1);
+var import_cors = __toESM(require("cors"), 1);
 var import_meta = {};
 import_dotenv.default.config();
 var __filename = (0, import_url.fileURLToPath)(import_meta.url);
@@ -36,7 +37,22 @@ var __dirname = import_path.default.dirname(__filename);
 async function startServer() {
   const app = (0, import_express.default)();
   const PORT = 3e3;
+  app.use((0, import_cors.default)());
+  app.use((req, res, next) => {
+    res.setHeader("Cross-Origin-Opener-Policy", "unsafe-none");
+    res.setHeader("Cross-Origin-Embedder-Policy", "unsafe-none");
+    next();
+  });
   app.use(import_express.default.json({ limit: "50mb" }));
+  app.get("/api/health", (req, res) => {
+    res.json({
+      status: "ok",
+      env: {
+        hasGemini: !!process.env.GEMINI_API_KEY,
+        hasResend: !!process.env.RESEND_API_KEY
+      }
+    });
+  });
   const resend = process.env.RESEND_API_KEY ? new import_resend.Resend(process.env.RESEND_API_KEY) : null;
   const ai = process.env.GEMINI_API_KEY ? new import_genai.GoogleGenAI({
     apiKey: process.env.GEMINI_API_KEY,
