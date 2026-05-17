@@ -28,17 +28,26 @@ async function startServer() {
   }) : null;
 
   // API Routes
+  app.get("/api/ai/health", (req, res) => {
+    res.json({ 
+      configured: !!ai,
+      model: "gemini-3-flash-preview"
+    });
+  });
+
   app.post("/api/ai/extract", async (req, res) => {
     if (!ai) {
+      console.error("Gemini API key missing in environment");
       return res.status(500).json({ error: "Gemini API key not configured" });
     }
 
     try {
       const { imageBase64, mimeType } = req.body;
+      console.log(`[AI Extract] Starting extraction for ${mimeType}`);
       
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
-        contents: [{
+        contents: {
           parts: [
             {
               inlineData: {
@@ -48,18 +57,21 @@ async function startServer() {
             },
             { text: "Extract car details from this image. Return JSON ONLY with keys: brand, model, year, category (one of: Luxury المتميزة, عائلية SUV, اقتصادية, رياضية), pricePerDay (estimate if not visible, e.g. 1000), engine, transmission (أوتوماتيكي or يدوي), caution (estimate, e.g. 5000), description (short marketing text in Arabic)." }
           ]
-        }]
+        }
       });
 
+      console.log("[AI Extract] Response received");
       const responseText = response.text;
-      const jsonMatch = responseText?.match(/\{[\s\S]*\}/);
+      if (!responseText) throw new Error("Empty response from AI");
+
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         return res.json(JSON.parse(jsonMatch[0]));
       }
       res.status(422).json({ error: "Could not extract structured data" });
-    } catch (err) {
+    } catch (err: any) {
       console.error("AI Extraction Error:", err);
-      res.status(500).json({ error: "Failed to process image with AI" });
+      res.status(500).json({ error: err.message || "Failed to process image with AI" });
     }
   });
 
@@ -68,6 +80,7 @@ async function startServer() {
 
     try {
       const { messages, history } = req.body;
+      console.log(`[AI Chat] Received message with ${history?.length || 0} history items`);
       
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
@@ -76,7 +89,7 @@ async function startServer() {
           { role: 'user', parts: messages }
         ],
         config: {
-          systemInstruction: "أنت مساعد ذكي لمدير تطبيق تأجير سيارات فخمة في المغرب. يمكنك اقتراح تفاصيل السيارات من الصور بدقة. أسماء الفئات هي: Luxury المتميزة، عائلية SUV، اقتصادية، رياضية. يجب عليك استخدام أداة addCarToDatabase إذا طلب منك ذلك أو إذا كان الهدف من المحادثة هو إضافة سيارة من صورة. اكتب وصفاً جذاباً للسيارات باللغة العربية.",
+          systemInstruction: "أنت مساعد ذكي لمدير تطبيق تأجير سيارات فخمة في المغرب. \nعند استلام صورة سيارة، قم باستخراج تفاصيلها (الماركة، الموديل، السنة، الفئة، السعر المقترح، المحرك، ناقل الحركة، الضمان، والوصف). \nاعرض هذه التفاصيل للمستخدم أولاً في رسالة واضحة ومنسقة واسأله إذا كانت صحيحة أو إذا كان يريد تعديل أي منها. \nلا تقم باستدعاء أداة addCarToDatabase أبداً إلا بعد أن يطلب منك المستخدم ذلك صراحة (مثلاً: 'أضفها'، 'تم'، 'احفظها'). \nإذا طلب المستخدم تعديل أي معلومة، قم بتحديث بياناتك واعرضها مجدداً للتأكيد. \nاجعل الوصف جذاباً وباللغة العربية.",
           tools: [{
             functionDeclarations: [{
               name: "addCarToDatabase",
@@ -100,14 +113,16 @@ async function startServer() {
           }]
         }
       });
+      
+      console.log("[AI Chat] Response received", { hasText: !!response.text, hasFunctionCalls: !!response.functionCalls });
 
-      const functionCalls = response.functionCalls;
-      const text = response.text;
-
-      res.json({ text, functionCalls });
-    } catch (err) {
+      res.json({ 
+        text: response.text, 
+        functionCalls: response.functionCalls 
+      });
+    } catch (err: any) {
       console.error("AI Chat Error:", err);
-      res.status(500).json({ error: "Failed to process chat with AI" });
+      res.status(500).json({ error: err.message || "Failed to process chat with AI" });
     }
   });
 

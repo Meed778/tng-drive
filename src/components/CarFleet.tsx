@@ -4,6 +4,7 @@ import { db } from '../services/firebase';
 import { Car } from '../services/carsData';
 import { useSettings } from '../services/useSettings';
 import { Search, SlidersHorizontal, X, ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface CarFleetProps {
   onSelectCar: (carId: string) => void;
@@ -52,12 +53,12 @@ export function CarFleet({ onSelectCar, cars }: CarFleetProps) {
   }
 
   return (
-    <div className="w-full flex flex-col pt-8 fade-in">
+    <div className="w-full flex flex-col pt-4 md:pt-8 fade-in">
       {/* Header & Title */}
-      <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
-        <div>
-          <h2 className="text-4xl font-serif text-[#C5A059] mb-2">{settings.heroTitle}</h2>
-          <p className="text-white/50 text-sm">{settings.heroSubtitle}</p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 md:mb-12 gap-6">
+        <div className="md:max-w-xl">
+          <h2 className="text-3xl md:text-4xl font-serif text-[#C5A059] mb-2">{settings.heroTitle}</h2>
+          <p className="text-white/50 text-xs md:text-sm">{settings.heroSubtitle}</p>
         </div>
         
         {/* Search Bar */}
@@ -75,14 +76,14 @@ export function CarFleet({ onSelectCar, cars }: CarFleetProps) {
       </div>
 
       {/* Filter Controls Component */}
-      <div className="mb-12 border-y border-white/5 py-6">
-        <div className="flex flex-wrap items-center justify-between gap-6">
-          <div className="flex flex-wrap gap-2">
+      <div className="mb-8 md:mb-12 border-y border-white/5 py-4 md:py-6">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6">
+          <div className="flex gap-2 overflow-x-auto no-scrollbar scroll-smooth -mx-4 px-4 md:mx-0 md:px-0">
             {categories.map(cat => (
               <button
                 key={cat}
                 onClick={() => setCategoryFilter(cat)}
-                className={`px-6 py-2 text-[10px] uppercase tracking-[0.2em] transition-all border whitespace-nowrap ${
+                className={`px-5 md:px-6 py-2.5 md:py-2 text-[9px] md:text-[10px] uppercase tracking-[0.2em] transition-all border whitespace-nowrap rounded-sm flex-shrink-0 active:scale-95 touch-manipulation ${
                   categoryFilter === cat 
                     ? 'border-[#C5A059] bg-[#C5A059] text-[#0A0A0A]' 
                     : 'border-white/10 text-white/50 hover:border-white/20 hover:text-white'
@@ -95,7 +96,7 @@ export function CarFleet({ onSelectCar, cars }: CarFleetProps) {
 
           <button 
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 px-6 py-2 text-[10px] uppercase tracking-[0.2em] border transition-all ${
+            className={`flex items-center justify-center gap-2 px-6 py-3 md:py-2 text-[10px] uppercase tracking-[0.2em] border transition-all active:scale-95 touch-manipulation ${
               showFilters ? 'border-[#C5A059] text-[#C5A059]' : 'border-white/10 text-white/50 hover:border-white/20'
             }`}
           >
@@ -169,51 +170,58 @@ export function CarFleet({ onSelectCar, cars }: CarFleetProps) {
         </span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-        {filteredCars.length > 0 ? (
-          filteredCars.map(car => (
-            <div 
-              key={car.id} 
-              className="group bg-[#141414] border border-white/5 p-6 cursor-pointer hover:border-[#C5A059]/50 transition-colors flex flex-col justify-between min-h-[400px]"
-              onClick={() => onSelectCar(car.id)}
-            >
-              <div>
-                <div className="flex justify-between items-start mb-6">
-                  <div>
-                    <span className="text-[#C5A059] text-[10px] uppercase tracking-widest block mb-1">{car.brand}</span>
-                    <h3 className="text-3xl font-serif text-white group-hover:text-[#C5A059] transition-colors">{car.model}</h3>
-                  </div>
-                  <span className="text-white/30 text-2xl font-serif italic">{car.year}</span>
-                </div>
-                
-                <div className="w-full h-48 bg-white/5 mb-6 overflow-hidden flex items-center justify-center relative">
-                   <img src={car.imageUrl} alt={car.model} referrerPolicy="no-referrer" className="object-cover w-full h-full opacity-80 group-hover:opacity-100 transition-opacity group-hover:scale-105 duration-700" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-transparent"></div>
-                </div>
-              </div>
-
-              <div className="flex justify-between items-end border-t border-white/5 pt-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
+        <AnimatePresence mode="popLayout">
+          {filteredCars.length > 0 ? (
+            filteredCars.map(car => (
+              <motion.div 
+                layout
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.3 }}
+                key={car.id} 
+                className="group bg-[#141414] border border-white/5 p-5 md:p-6 cursor-pointer hover:border-[#C5A059]/50 transition-colors flex flex-col justify-between min-h-[360px] md:min-h-[400px] active:scale-[0.98] transition-transform"
+                onClick={() => onSelectCar(car.id)}
+              >
                 <div>
-                  <span className="block text-[10px] uppercase tracking-[0.1em] text-white/30 mb-1">السعر اليومي</span>
-                  <span className="text-xl font-bold text-white">{car.pricePerDay} <span className="text-xs text-white/50 font-normal">درهم</span></span>
+                  <div className="flex justify-between items-start mb-4 md:mb-6">
+                    <div>
+                      <span className="text-[#C5A059] text-[9px] md:text-[10px] uppercase tracking-widest block mb-1">{car.brand}</span>
+                      <h3 className="text-2xl md:text-3xl font-serif text-white group-hover:text-[#C5A059] transition-colors line-clamp-1">{car.model}</h3>
+                    </div>
+                    <span className="text-white/30 text-xl md:text-2xl font-serif italic">{car.year}</span>
+                  </div>
+                  
+                  <div className="w-full h-40 md:h-48 bg-white/5 mb-4 md:mb-6 overflow-hidden flex items-center justify-center relative rounded-sm">
+                     <img src={car.imageUrl} alt={car.model} referrerPolicy="no-referrer" className="object-cover w-full h-full opacity-80 group-hover:opacity-100 transition-opacity group-hover:scale-105 duration-700" />
+                     <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-transparent"></div>
+                  </div>
                 </div>
-                <div className="w-10 h-10 border border-white/10 flex items-center justify-center group-hover:bg-[#C5A059] group-hover:text-[#0A0A0A] group-hover:border-[#C5A059] transition-all duration-300">
-                  ←
+
+                <div className="flex justify-between items-end border-t border-white/5 pt-4">
+                  <div>
+                    <span className="block text-[9px] md:text-[10px] uppercase tracking-[0.1em] text-white/30 mb-1">السعر اليومي</span>
+                    <span className="text-xl font-bold text-white tracking-widest">{car.pricePerDay} <span className="text-[10px] text-white/50 font-normal">درهم</span></span>
+                  </div>
+                  <div className="w-10 h-10 border border-white/10 flex items-center justify-center group-hover:bg-[#C5A059] group-hover:text-[#0A0A0A] group-hover:border-[#C5A059] transition-all duration-300 rounded-sm">
+                    ←
+                  </div>
                 </div>
-              </div>
+              </motion.div>
+            ))
+          ) : (
+            <div className="col-span-full py-20 text-center border border-dashed border-white/10 rounded-lg">
+              <p className="text-white/30 text-sm">لم يتم العثور على سيارات تطابق بحثك.</p>
+              <button 
+                onClick={clearFilters}
+                className="mt-4 text-[#C5A059] text-xs uppercase tracking-widest hover:underline"
+              >
+                إعادة تعيين الكل
+              </button>
             </div>
-          ))
-        ) : (
-          <div className="col-span-full py-24 text-center border border-dashed border-white/10">
-            <p className="text-white/30 text-sm">لم يتم العثور على سيارات تطابق بحثك. حاول تغيير معايير البحث.</p>
-            <button 
-              onClick={clearFilters}
-              className="mt-4 text-[#C5A059] text-xs uppercase tracking-widest hover:underline"
-            >
-              إعادة تعيين الكل
-            </button>
-          </div>
-        )}
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Contact & Map Section */}

@@ -142,10 +142,11 @@ export function BookingCalendar({ carId, pricePerDay, carName }: BookingCalendar
       {/* Custom styles to force dark mode support into react-day-picker if needed */}
       <style>{`
         .rdp {
-          --rdp-cell-size: 36px;
+          --rdp-cell-size: 40px;
           @media (min-width: 768px) {
             --rdp-cell-size: 44px;
           }
+          margin: 0;
           --rdp-accent-color: #C5A059;
           --rdp-background-color: #1a1a1a;
           --rdp-accent-color-dark: #C5A059;
@@ -153,16 +154,26 @@ export function BookingCalendar({ carId, pricePerDay, carName }: BookingCalendar
           --rdp-outline: 2px solid #C5A059;
           --rdp-outline-selected: 2px solid #C5A059;
         }
+        .rdp-day {
+          border-radius: 2px !important;
+        }
         .rdp-day_selected, .rdp-day_selected:focus-visible, .rdp-day_selected:hover {
-          background-color: #C5A059;
-          color: #0A0A0A;
+          background-color: #C5A059 !important;
+          color: #0A0A0A !important;
+          font-weight: bold;
         }
         .rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
           background-color: rgba(197, 160, 89, 0.2);
         }
         .rdp-day_disabled {
-          opacity: 0.25;
+          opacity: 0.15;
           text-decoration: line-through;
+        }
+        .rdp-head_cell {
+          font-size: 11px;
+          font-weight: bold;
+          color: rgba(255, 255, 255, 0.3);
+          text-transform: uppercase;
         }
       `}</style>
 

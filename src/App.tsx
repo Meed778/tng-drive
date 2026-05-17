@@ -149,8 +149,8 @@ export default function App() {
     
     // Redirect non-admins away from admin views
     if (currentView.startsWith('admin-') && !loading && !isAdmin && authInitialized) {
-      console.log("[Auth] Unauthorized access to admin view, redirecting to home");
-      setCurrentView('home');
+      console.log("[Auth] Unauthorized access to admin view, redirecting to fleet");
+      setCurrentView('fleet');
     }
   }, [isAdmin, isAdminMode, authInitialized, loading, hasAutoNavigated, currentView]);
 
@@ -167,7 +167,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen w-full bg-[#0A0A0A] text-[#E5E5E5] font-sans flex flex-col overflow-x-hidden select-none" dir="rtl">
-      <header className="sticky top-0 h-20 md:h-24 flex items-center justify-between px-4 md:px-12 border-b border-white/5 shrink-0 z-50 bg-[#0A0A0A]/80 backdrop-blur-lg">
+      <header className="sticky top-0 h-16 md:h-24 flex items-center justify-between px-4 md:px-12 border-b border-white/5 shrink-0 z-50 bg-[#0A0A0A]/80 backdrop-blur-lg">
         <div className="flex items-center gap-3 md:gap-4 cursor-pointer group" onClick={() => { setCurrentView('fleet'); setIsMobileMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
           <div className="relative w-10 h-10 md:w-12 md:h-12 flex items-center justify-center">
             {/* Elegant Logo Icon */}
@@ -224,7 +224,7 @@ export default function App() {
 
         {/* Mobile Menu Overlay */}
         {isMobileMenuOpen && (
-          <div className="fixed inset-0 top-20 md:top-24 bg-[#0A0A0A]/95 backdrop-blur-md z-40 flex flex-col p-8 lg:hidden animate-in fade-in slide-in-from-top-4 duration-300 overflow-y-auto">
+          <div className="fixed inset-0 top-16 md:top-24 bg-[#0A0A0A]/95 backdrop-blur-md z-40 flex flex-col p-8 lg:hidden animate-in fade-in slide-in-from-top-4 duration-300 overflow-y-auto">
              <div className="flex flex-col gap-2">
              <button onClick={() => { setCurrentView('fleet'); setIsMobileMenuOpen(false); }} className={`text-right py-4 border-b border-white/5 text-lg ${currentView === 'fleet' ? 'text-[#C5A059]' : 'text-white/70'}`}>أسطول السيارات</button>
              
@@ -257,7 +257,7 @@ export default function App() {
 
       {/* Admin Sub-navigation (if in admin view) */}
       {isAdmin && currentView.startsWith('admin-') && (
-        <div className="sticky top-20 md:top-24 h-12 bg-[#141414] border-b border-white/5 flex items-center shrink-0 z-40">
+        <div className="sticky top-16 md:top-24 h-12 bg-[#141414] border-b border-white/5 flex items-center shrink-0 z-40">
           <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#141414] to-transparent z-10 pointer-events-none md:hidden"></div>
           <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#141414] to-transparent z-10 pointer-events-none md:hidden"></div>
           
@@ -271,15 +271,8 @@ export default function App() {
         </div>
       )}
 
-      <main className={`flex-1 flex flex-col ${currentView.startsWith('admin-') || currentView === 'fleet' || currentView === 'details' ? 'px-6 md:px-12 py-12 md:py-16' : 'px-0 py-0'} gap-16 lg:overflow-visible relative`}>
+      <main className={`flex-1 flex flex-col px-4 md:px-12 py-8 md:py-16 gap-10 md:gap-16 lg:overflow-visible relative`}>
         
-        {currentView === 'home' && (
-          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-6">
-             <h2 className="text-[#C5A059] text-2xl font-serif mb-4">أهلاً بكم في TNG Drive</h2>
-             <button onClick={() => setCurrentView('fleet')} className="bg-[#C5A059] text-black px-8 py-3 font-bold uppercase tracking-widest text-xs">عرض أسطول السيارات</button>
-          </div>
-        )}
-
         {currentView === 'fleet' && (
            <CarFleet cars={dbCars} onSelectCar={navigateToDetails} />
         )}
@@ -344,7 +337,7 @@ export default function App() {
                 url.searchParams.set('admin', 'true');
                 window.history.pushState({}, '', url.toString());
                 setIsAdminMode(true);
-                setCurrentView('home'); 
+                setCurrentView('fleet'); 
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               } else {
                 login();

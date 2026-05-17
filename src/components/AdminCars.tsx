@@ -82,29 +82,29 @@ export function AdminCars() {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
+    const filesArray = Array.from(files) as File[];
     setIsUploading(true);
+    
     try {
-      const newUrls: string[] = [];
-      
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const storageRef = ref(storage, `cars/${Date.now()}_${file.name}`);
-        await uploadBytes(storageRef, file);
-        const url = await getDownloadURL(storageRef);
-        newUrls.push(url);
-        
-        // If it's the first file and we don't have images yet, consider AI extract
-        if (i === 0 && imageUrls.length === 0) {
-           if (confirm("هل تريد استخراج بيانات السيارة من هذه الصورة باستخدام الذكاء الاصطناعي؟")) {
-             handleAiExtract(file);
-           }
+      // If first upload and user wants AI extract
+      if (imageUrls.length === 0) {
+        if (confirm("هل تريد استخراج بيانات السيارة من الصورة الأولى باستخدام الذكاء الاصطناعي؟")) {
+          // Trigger AI extraction in parallel with upload
+          handleAiExtract(filesArray[0]);
         }
       }
-      
+
+      const uploadPromises = filesArray.map(async (file) => {
+        const storageRef = ref(storage, `cars/${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name}`);
+        const snapshot = await uploadBytes(storageRef, file);
+        return await getDownloadURL(snapshot.ref);
+      });
+
+      const newUrls = await Promise.all(uploadPromises);
       setImageUrls(prev => [...prev, ...newUrls]);
     } catch (err) {
-      console.error("Error uploading file", err);
-      alert("فشل رفع الصور، يرجى المحاولة مرة أخرى");
+      console.error("Error uploading files", err);
+      alert("فشل رفع بعض أو كل الصور، يرجى المحاولة مرة أخرى");
     } finally {
       setIsUploading(false);
     }
@@ -253,9 +253,9 @@ export function AdminCars() {
         
         <textarea required placeholder="وصف للسيارة ومميزاتها..." value={description} onChange={e => setDescription(e.target.value)} className="col-span-full bg-[#141414] border border-white/10 p-3 text-sm focus:border-[#C5A059] outline-none text-white h-24 resize-none" />
         
-        <button type="submit" disabled={adding || isAiLoading} className="col-span-full bg-[#C5A059] text-[#0A0A0A] font-bold py-3 hover:bg-white transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-          {adding ? 'جاري الإضافة...' : (isAiLoading ? 'جاري تحليل الصورة بالذكاء الاصطناعي...' : 'حفظ السيارة في الأسطول')}
-          {isAiLoading && <div className="w-4 h-4 border-2 border-[#0A0A0A]/20 border-t-[#0A0A0A] rounded-full animate-spin"></div>}
+        <button type="submit" disabled={adding || isAiLoading || isUploading} className="col-span-full bg-[#C5A059] text-[#0A0A0A] font-bold py-3 hover:bg-white transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+          {adding ? 'جاري الإضافة...' : (isAiLoading ? 'جاري تحليل الصورة بالذكاء الاصطناعي...' : (isUploading ? 'جاري رفع الصور...' : 'حفظ السيارة في الأسطول'))}
+          {(isAiLoading || adding || isUploading) && <div className="w-4 h-4 border-2 border-[#0A0A0A]/20 border-t-[#0A0A0A] rounded-full animate-spin"></div>}
         </button>
       </form>
 

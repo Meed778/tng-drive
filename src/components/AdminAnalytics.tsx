@@ -121,26 +121,26 @@ export function AdminAnalytics() {
   }
 
   return (
-    <div className="w-full bg-[#141414] border border-white/10 p-6 md:p-12 mb-12 fade-in">
-      <div className="mb-12">
-        <h2 className="text-3xl font-serif text-[#C5A059] mb-2">لوحة الإحصائيات</h2>
-        <p className="text-white/50 text-sm">نظرة عامة على أداء الحجوزات والعائدات</p>
+    <div className="w-full bg-[#141414] border border-white/10 p-5 md:p-12 mb-8 md:mb-12 fade-in">
+      <div className="mb-8 md:mb-12">
+        <h2 className="text-2xl md:text-3xl font-serif text-[#C5A059] mb-1 md:mb-2 text-center md:text-right">لوحة الإحصائيات</h2>
+        <p className="text-white/40 text-[10px] md:text-sm text-center md:text-right">نظرة عامة على أداء الحجوزات والعائدات</p>
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-        <div className="bg-[#0A0A0A] border border-[#C5A059]/20 p-6">
-          <span className="text-[10px] uppercase tracking-widest text-white/50 block mb-2">إجمالي الحجوزات المؤكدة</span>
-          <span className="text-4xl font-serif text-white">{stats.confirmedCount}</span>
-          <span className="text-xs text-white/30 mr-2">من أصل {stats.totalBookings} طلب</span>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-12 md:mb-16">
+        <div className="bg-[#0A0A0A] border border-[#C5A059]/10 p-5 md:p-6 transition-transform hover:scale-[1.02]">
+          <span className="text-[9px] md:text-[10px] uppercase tracking-widest text-white/50 block mb-2">إجمالي الحجوزات المؤكدة</span>
+          <span className="text-3xl md:text-4xl font-serif text-white">{stats.confirmedCount}</span>
+          <span className="text-[10px] text-white/20 mr-2 block mt-1">من أصل {stats.totalBookings} طلب</span>
         </div>
-        <div className="bg-[#0A0A0A] border border-[#C5A059]/20 p-6">
-          <span className="text-[10px] uppercase tracking-widest text-white/50 block mb-2">العائدات الإجمالية (مقدرة)</span>
-          <span className="text-4xl font-serif text-[#C5A059]">{stats.totalRevenue.toLocaleString()} <span className="text-sm font-sans">درهم</span></span>
+        <div className="bg-[#0A0A0A] border border-[#C5A059]/10 p-5 md:p-6 transition-transform hover:scale-[1.02]">
+          <span className="text-[9px] md:text-[10px] uppercase tracking-widest text-white/50 block mb-2">العائدات الإجمالية (مقدرة)</span>
+          <span className="text-3xl md:text-4xl font-serif text-[#C5A059]">{stats.totalRevenue.toLocaleString()} <span className="text-xs font-sans">درهم</span></span>
         </div>
-        <div className="bg-[#0A0A0A] border border-[#C5A059]/20 p-6">
-          <span className="text-[10px] uppercase tracking-widest text-white/50 block mb-2">السيارة الأكثر طلباً</span>
-          <span className="text-2xl font-serif text-white truncate block">
+        <div className="bg-[#0A0A0A] border border-[#C5A059]/10 p-5 md:p-6 transition-transform hover:scale-[1.02] sm:col-span-2 md:col-span-1">
+          <span className="text-[9px] md:text-[10px] uppercase tracking-widest text-white/50 block mb-2">السيارة الأكثر طلباً</span>
+          <span className="text-xl md:text-2xl font-serif text-white truncate block">
             {stats.popularCarsData.length > 0 ? stats.popularCarsData[0].name : '-'}
           </span>
         </div>

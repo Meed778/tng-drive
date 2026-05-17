@@ -21,6 +21,7 @@ export function AdminAssistant() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [persistedImageUrl, setPersistedImageUrl] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -73,7 +74,7 @@ export function AdminAssistant() {
 
     try {
       let parts: any[] = [];
-      let finalImageUrl = '';
+      let currentImageUrl = persistedImageUrl;
 
       // Upload file to firebase first so we can save it in the DB later
       if (currentFile) {
@@ -90,11 +91,13 @@ export function AdminAssistant() {
         setMessages(prev => prev.map(m => m.id === loadingMsgId ? { ...m, text: 'جاري رفع الصورة إلى التخزين...' } : m));
         const storageRef = ref(storage, `cars_ai/${Date.now()}_${currentFile.name}`);
         await uploadBytes(storageRef, currentFile);
-        finalImageUrl = await getDownloadURL(storageRef);
+        currentImageUrl = await getDownloadURL(storageRef);
+        setPersistedImageUrl(currentImageUrl);
       }
 
-      if (userMessageText) {
-        parts.push({ text: userMessageText });
+      const textPart = userMessageText || (currentFile ? "ما هي تفاصيل هذه السيارة؟" : "");
+      if (textPart) {
+        parts.push({ text: textPart });
       }
 
       setMessages(prev => prev.map(m => m.id === loadingMsgId ? { ...m, text: 'جاري تحليل البيانات مع الذكاء الاصطناعي...' } : m));
@@ -134,15 +137,20 @@ export function AdminAssistant() {
               transmission: args.transmission || "أوتوماتيكي",
               caution: args.caution || 0,
               description: args.description || "",
-              imageUrl: finalImageUrl || "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&q=80&w=1200",
-              images: finalImageUrl ? [finalImageUrl] : [],
+              imageUrl: currentImageUrl || "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&q=80&w=1200",
+              images: currentImageUrl ? [currentImageUrl] : [],
               createdAt: serverTimestamp()
             };
 
             await addDoc(collection(db, 'cars'), newCar);
-            responseText = `تم إضافة السيارة بنجاح! \nالماركة: ${newCar.brand} ${newCar.model} \nالسعر: ${newCar.pricePerDay} درهم/يوم. \nهل هناك شيء آخر يمكنني المساعدة به؟`;
+            responseText = (responseText ? responseText + "\n\n" : "") + `✅ تم إضافة السيارة بنجاح إلى قاعدة البيانات!\n\nتفاصيل السيارة المحفوظة:\n- الماركة: ${newCar.brand} ${newCar.model}\n- السعر: ${newCar.pricePerDay} درهم/يوم\n- الفئة: ${newCar.category}`;
+            setPersistedImageUrl(''); // Clear after successful addition
           }
         }
+      }
+
+      if (!responseText && !functionCalls) {
+         responseText = "عذراً، لم أتمكن من الحصول على رد مفيد من الذكاء الاصطناعي. حاول مرة أخرى.";
       }
 
       setMessages(prev => prev.map(m => m.id === loadingMsgId ? { ...m, text: responseText, loading: false } : m));
@@ -160,13 +168,13 @@ export function AdminAssistant() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-6rem)] bg-[#0A0A0A]">
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+    <div className="flex flex-col h-[calc(100vh-10rem)] md:h-[calc(100vh-8rem)] bg-[#0A0A0A] rounded-sm overflow-hidden border border-white/5">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-6 scroll-smooth no-scrollbar">
         {messages.map(msg => (
           <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[80%] md:max-w-[60%] rounded-2xl p-4 ${msg.role === 'user' ? 'bg-[#C5A059] text-black rounded-tr-none' : 'bg-[#1A1A1A] border border-white/5 text-[#E5E5E5] rounded-tl-none'}`}>
-              <div className="flex items-center gap-2 mb-2 opacity-60">
-                <span className="text-xs font-bold uppercase tracking-wider">{msg.role === 'user' ? 'أنت' : 'المساعد الذكي'}</span>
+            <div className={`max-w-[90%] md:max-w-[70%] rounded-2xl p-4 ${msg.role === 'user' ? 'bg-[#C5A059] text-[#0A0A0A] rounded-tr-none font-bold' : 'bg-[#1A1A1A] border border-white/5 text-[#E5E5E5] rounded-tl-none'}`}>
+              <div className="flex items-center gap-2 mb-2 opacity-50">
+                <span className="text-[9px] md:text-xs font-bold uppercase tracking-wider">{msg.role === 'user' ? 'أنت' : 'المساعد الذكي'}</span>
               </div>
               
               {msg.image && (

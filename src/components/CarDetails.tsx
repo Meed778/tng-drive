@@ -76,24 +76,24 @@ export function CarDetails({ car, onBack }: CarDetailsProps) {
     : 'جديد';
 
   return (
-    <div className="flex flex-col gap-16 w-full fade-in">
+    <div className="flex flex-col gap-10 md:gap-16 w-full fade-in">
       {/* Top Section: Details & Booking */}
-      <div className="flex flex-col lg:flex-row gap-16 w-full">
+      <div className="flex flex-col lg:flex-row gap-10 md:gap-16 w-full">
         {/* Car Details Area */}
-        <div className="w-full lg:w-1/2 flex flex-col justify-between h-full min-h-[400px]">
-          <div className="space-y-8 mt-4 lg:mt-0">
+        <div className="w-full lg:w-1/2 flex flex-col justify-between h-full min-h-[300px] md:min-h-[400px]">
+          <div className="space-y-6 md:space-y-8 mt-2 lg:mt-0">
             <div className="flex items-center gap-3">
-              <button onClick={onBack} className="text-[#C5A059] text-[10px] uppercase tracking-[0.2em] font-medium border border-white/20 px-4 py-2 hover:bg-[#C5A059] hover:text-[#0A0A0A] transition-colors ml-4 cursor-pointer">
-                ← عودة للأسطول
+              <button onClick={onBack} className="text-[#C5A059] text-[9px] md:text-[10px] uppercase tracking-[0.15em] font-bold border border-white/20 px-4 py-2.5 hover:bg-[#C5A059] hover:text-[#0A0A0A] transition-colors ml-4 cursor-pointer active:scale-95 touch-manipulation">
+                ← عودة
               </button>
-              <span className="h-px w-8 bg-[#C5A059]"></span>
-              <span className="text-white/50 text-[10px] uppercase tracking-[0.2em] font-medium">
+              <span className="h-px w-6 md:w-8 bg-[#C5A059]"></span>
+              <span className="text-white/50 text-[9px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] font-medium">
                 متاح للتسليم الفوري
               </span>
             </div>
             
-            <div className="relative w-full mt-8 flex flex-col gap-4">
-              <div className="relative w-full h-[250px] md:h-[400px] bg-white/5 rounded-sm overflow-hidden border border-white/5">
+            <div className="relative w-full mt-6 md:mt-8 flex flex-col gap-4">
+              <div className="relative w-full h-[220px] md:h-[400px] bg-white/5 rounded-sm overflow-hidden border border-white/5">
                 <img 
                   src={carImages[activeImageIndex]} 
                   alt={`${car.model} - view ${activeImageIndex + 1}`} 
@@ -106,13 +106,13 @@ export function CarDetails({ car, onBack }: CarDetailsProps) {
                   <>
                     <button 
                       onClick={() => setActiveImageIndex((prev) => (prev === 0 ? carImages.length - 1 : prev - 1))}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 text-[#C5A059] rounded-full hover:bg-[#C5A059] hover:text-[#0A0A0A] transition-all"
+                      className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-black/60 text-[#C5A059] rounded-full hover:bg-[#C5A059] hover:text-[#0A0A0A] transition-all touch-manipulation z-10"
                     >
                       ←
                     </button>
                     <button 
                       onClick={() => setActiveImageIndex((prev) => (prev === carImages.length - 1 ? 0 : prev + 1))}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 text-[#C5A059] rounded-full hover:bg-[#C5A059] hover:text-[#0A0A0A] transition-all"
+                      className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-black/60 text-[#C5A059] rounded-full hover:bg-[#C5A059] hover:text-[#0A0A0A] transition-all touch-manipulation z-10"
                     >
                       →
                     </button>
@@ -121,12 +121,12 @@ export function CarDetails({ car, onBack }: CarDetailsProps) {
               </div>
               
               {carImages.length > 1 && (
-                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide no-scrollbar -mx-2 px-2">
                   {carImages.map((img, idx) => (
                     <button 
                       key={idx} 
                       onClick={() => setActiveImageIndex(idx)}
-                      className={`relative flex-shrink-0 w-20 h-14 border transition-all ${activeImageIndex === idx ? 'border-[#C5A059] opacity-100' : 'border-white/10 opacity-40 hover:opacity-70'}`}
+                      className={`relative flex-shrink-0 w-16 h-12 md:w-20 md:h-14 border transition-all ${activeImageIndex === idx ? 'border-[#C5A059] opacity-100' : 'border-white/10 opacity-40 hover:opacity-70'}`}
                     >
                       <img src={img} alt="" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                     </button>
@@ -135,9 +135,9 @@ export function CarDetails({ car, onBack }: CarDetailsProps) {
               )}
             </div>
 
-            <h1 className="text-4xl md:text-[72px] font-serif leading-[1.1] text-white tracking-tight mt-6">
+            <h1 className="text-3xl md:text-[72px] font-serif leading-[1.1] text-white tracking-tight mt-4 md:mt-6">
               {car.brand}<br />
-              <span className="italic font-light opacity-80 text-3xl md:text-[56px]">{car.model} {car.year}</span>
+              <span className="italic font-light opacity-80 text-2xl md:text-[56px]">{car.model} {car.year}</span>
             </h1>
             
             <div className="flex items-center gap-2 mt-2">
@@ -150,18 +150,18 @@ export function CarDetails({ car, onBack }: CarDetailsProps) {
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-8 md:gap-16 items-end pb-2 mt-12 pt-8 border-t border-white/5">
+          <div className="flex flex-wrap gap-6 md:gap-16 items-end pb-2 mt-10 md:mt-12 pt-8 border-t border-white/5">
             <div>
-              <span className="block text-[10px] tracking-[0.1em] text-white/30 mb-2 font-bold">المحرك / الوقود</span>
-              <span className="text-sm font-sans tracking-wide text-white/80">{car.engine}</span>
+              <span className="block text-[9px] md:text-[10px] tracking-[0.1em] text-white/30 mb-2 font-bold uppercase">المحرك / الوقود</span>
+              <span className="text-xs md:text-sm font-sans tracking-wide text-white/80">{car.engine}</span>
             </div>
             <div>
-              <span className="block text-[10px] tracking-[0.1em] text-white/30 mb-2 font-bold">ناقل الحركة</span>
-              <span className="text-sm font-sans tracking-wide text-white/80">{car.transmission}</span>
+              <span className="block text-[9px] md:text-[10px] tracking-[0.1em] text-white/30 mb-2 font-bold uppercase">ناقل الحركة</span>
+              <span className="text-xs md:text-sm font-sans tracking-wide text-white/80">{car.transmission}</span>
             </div>
             <div>
-              <span className="block text-[10px] tracking-[0.1em] text-white/30 mb-2 font-bold">الضمان (Caution)</span>
-              <span className="text-sm font-sans tracking-wide text-white/80">{car.caution.toLocaleString()} درهم</span>
+              <span className="block text-[9px] md:text-[10px] tracking-[0.1em] text-white/30 mb-2 font-bold uppercase">الضمان (Caution)</span>
+              <span className="text-xs md:text-sm font-sans tracking-wide text-white/80">{car.caution.toLocaleString()} درهم</span>
             </div>
           </div>
         </div>
