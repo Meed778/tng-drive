@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { db, storage } from '../services/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { resizeImage, fileToBase64 } from '../lib/imageUtils';
 
 type Message = {
   id: string;
@@ -37,15 +38,6 @@ export function AdminAssistant() {
     }
   };
 
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve((reader.result as string).split(',')[1]);
-      reader.onerror = error => reject(error);
-    });
-  };
-
   const handleSend = async () => {
     if ((!input.trim() && !selectedFile) || isProcessing) return;
 
@@ -78,8 +70,13 @@ export function AdminAssistant() {
 
       // Upload file to firebase first so we can save it in the DB later
       if (currentFile) {
+        console.log("Starting resize and upload process for", currentFile.name);
+        setMessages(prev => prev.map(m => m.id === loadingMsgId ? { ...m, text: 'جاري تحسين حجم الصورة...' } : m));
+        
+        const resizedBlob = await resizeImage(currentFile);
+        
         // Prepare base64 for Gemini
-        const base64Data = await fileToBase64(currentFile);
+        const base64Data = await fileToBase64(resizedBlob);
         parts.push({
           inlineData: {
             mimeType: currentFile.type,
@@ -89,10 +86,16 @@ export function AdminAssistant() {
 
         // Upload to Firebase Storage
         setMessages(prev => prev.map(m => m.id === loadingMsgId ? { ...m, text: 'جاري رفع الصورة إلى التخزين...' } : m));
-        const storageRef = ref(storage, `cars_ai/${Date.now()}_${currentFile.name}`);
-        await uploadBytes(storageRef, currentFile);
-        currentImageUrl = await getDownloadURL(storageRef);
-        setPersistedImageUrl(currentImageUrl);
+        try {
+          const storageRef = ref(storage, `cars_ai/${Date.now()}_${currentFile.name}`);
+          const uploadTask = await uploadBytes(storageRef, resizedBlob);
+          console.log("Upload successful", uploadTask.metadata.fullPath);
+          currentImageUrl = await getDownloadURL(storageRef);
+          setPersistedImageUrl(currentImageUrl);
+        } catch (uploadError: any) {
+          console.error("Storage Upload Error:", uploadError);
+          throw new Error("فشل رفع الصورة إلى التخزين: " + (uploadError.message || "خطأ غير معروف"));
+        }
       }
 
       const textPart = userMessageText || (currentFile ? "ما هي تفاصيل هذه السيارة؟" : "");

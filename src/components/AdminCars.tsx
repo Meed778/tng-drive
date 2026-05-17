@@ -5,6 +5,7 @@ import { db, storage } from '../services/firebase';
 import { Car } from '../services/carsData';
 import { Trash2, AlertTriangle, X, Sparkles } from 'lucide-react';
 import { extractCarDataFromImage } from '../services/geminiService';
+import { resizeImage } from '../lib/imageUtils';
 
 export function AdminCars() {
   const [cars, setCars] = useState<Car[]>([]);
@@ -95,16 +96,25 @@ export function AdminCars() {
       }
 
       const uploadPromises = filesArray.map(async (file) => {
-        const storageRef = ref(storage, `cars/${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name}`);
-        const snapshot = await uploadBytes(storageRef, file);
-        return await getDownloadURL(snapshot.ref);
+        try {
+          const storageRef = ref(storage, `cars/${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name}`);
+          console.log("Resizing and Uploading", file.name);
+          const resizedBlob = await resizeImage(file);
+          const snapshot = await uploadBytes(storageRef, resizedBlob);
+          const url = await getDownloadURL(snapshot.ref);
+          console.log("Uploaded", file.name);
+          return url;
+        } catch (uploadErr: any) {
+          console.error(`Error uploading ${file.name}:`, uploadErr);
+          throw new Error(`فشل رفع الملف ${file.name}: ${uploadErr.message}`);
+        }
       });
 
       const newUrls = await Promise.all(uploadPromises);
       setImageUrls(prev => [...prev, ...newUrls]);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error uploading files", err);
-      alert("فشل رفع بعض أو كل الصور، يرجى المحاولة مرة أخرى");
+      alert(err.message || "فشل رفع بعض أو كل الصور، يرجى المحاولة مرة أخرى");
     } finally {
       setIsUploading(false);
     }

@@ -25,7 +25,11 @@ export default function App() {
   const { user, profile, logout, login, loading } = useAuth();
   const { settings } = useSettings();
   
-  const isAdmin = !!user && (user.email === 'pimo1999loko@gmail.com' || user.email === 'tangierdrive40@gmail.com' || profile?.isAdmin === true);
+  const isAdmin = !!user && (
+    user.email?.toLowerCase() === 'pimo1999loko@gmail.com' || 
+    user.email?.toLowerCase() === 'tangierdrive40@gmail.com' || 
+    profile?.isAdmin === true
+  );
 
   const [currentView, setCurrentView] = useState<ViewState>(() => {
     const saved = localStorage.getItem('tng-drive-view');
@@ -331,8 +335,6 @@ export default function App() {
               if (isAdmin) {
                 setCurrentView('admin-analytics');
               } else if (!isAdminMode) {
-                // If not in admin mode, add the trigger to URL but try to just set state if possible
-                // Actually, adding ?admin=true is a good hint for the login button to show up
                 const url = new URL(window.location.href);
                 url.searchParams.set('admin', 'true');
                 window.history.pushState({}, '', url.toString());
@@ -343,7 +345,7 @@ export default function App() {
                 login();
               }
             }} 
-            className="text-[8px] text-white/10 hover:text-white/30 transition-colors cursor-pointer"
+            className={`text-[9px] transition-colors cursor-pointer ${isAdmin ? 'text-[#C5A059] font-bold' : 'text-white/10 hover:text-white/30'}`}
           >
             Management
           </button>

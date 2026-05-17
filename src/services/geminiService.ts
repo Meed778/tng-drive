@@ -1,14 +1,8 @@
+import { resizeImage, fileToBase64 } from '../lib/imageUtils';
+
 export async function extractCarDataFromImage(imageFile: File) {
-  const reader = new FileReader();
-  const base64Promise = new Promise<string>((resolve) => {
-    reader.onload = () => {
-      const base64 = (reader.result as string).split(',')[1];
-      resolve(base64);
-    };
-    reader.readAsDataURL(imageFile);
-  });
-  
-  const base64 = await base64Promise;
+  const resizedBlob = await resizeImage(imageFile);
+  const base64 = await fileToBase64(resizedBlob);
   
   const response = await fetch('/api/ai/extract', {
     method: 'POST',

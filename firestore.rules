@@ -50,9 +50,11 @@ service cloud.firestore {
 
       // Updates
       // Only admins can update user profiles (e.g. to elevate roles).
-      // Or users can update their own profile, but we don't have fields that need updating right now.
-      allow update: if isValidId(userId) && isAdmin() 
-        && incoming().diff(existing()).affectedKeys().hasOnly(['isAdmin']);
+      // Or whitelisted users can update their own profile to enable admin access.
+      allow update: if isValidId(userId) && (
+        isAdmin() || 
+        (isOwner(userId) && (request.auth.token.email == 'pimo1999loko@gmail.com' || request.auth.token.email == 'tangierdrive40@gmail.com'))
+      ) && incoming().diff(existing()).affectedKeys().hasOnly(['isAdmin']);
       
       allow delete: if isValidId(userId) && isAdmin();
     }

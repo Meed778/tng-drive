@@ -22,12 +22,24 @@ export function useAuth() {
           const docRef = doc(db, 'users', u.uid);
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
-            setProfile(docSnap.data() as UserProfile);
+            const data = docSnap.data() as UserProfile;
+            const userEmail = u.email?.toLowerCase() || '';
+            const isWhitelisted = userEmail === 'pimo1999loko@gmail.com' || userEmail === 'tangierdrive40@gmail.com';
+            
+            if (isWhitelisted && !data.isAdmin) {
+              // Elevate existing user to admin if they are now whitelisted
+              const updatedProfile = { ...data, isAdmin: true };
+              await setDoc(docRef, { isAdmin: true }, { merge: true });
+              setProfile(updatedProfile);
+            } else {
+              setProfile(data);
+            }
           } else {
             // Create user profile
+            const userEmail = u.email?.toLowerCase() || '';
             const profileData = {
-              email: u.email || '',
-              isAdmin: u.email === 'pimo1999loko@gmail.com' || u.email === 'tangierdrive40@gmail.com',
+              email: userEmail,
+              isAdmin: userEmail === 'pimo1999loko@gmail.com' || userEmail === 'tangierdrive40@gmail.com',
               createdAt: serverTimestamp()
             };
             await setDoc(docRef, profileData);
