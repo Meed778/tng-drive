@@ -46,15 +46,23 @@ async function startServer() {
       }
     }
   }) : null;
+  app.get("/api/ai/health", (req, res) => {
+    res.json({
+      configured: !!ai,
+      model: "gemini-3-flash-preview"
+    });
+  });
   app.post("/api/ai/extract", async (req, res) => {
     if (!ai) {
+      console.error("Gemini API key missing in environment");
       return res.status(500).json({ error: "Gemini API key not configured" });
     }
     try {
       const { imageBase64, mimeType } = req.body;
+      console.log(`[AI Extract] Starting extraction for ${mimeType}`);
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
-        contents: [{
+        contents: {
           parts: [
             {
               inlineData: {
@@ -64,23 +72,26 @@ async function startServer() {
             },
             { text: "Extract car details from this image. Return JSON ONLY with keys: brand, model, year, category (one of: Luxury \u0627\u0644\u0645\u062A\u0645\u064A\u0632\u0629, \u0639\u0627\u0626\u0644\u064A\u0629 SUV, \u0627\u0642\u062A\u0635\u0627\u062F\u064A\u0629, \u0631\u064A\u0627\u0636\u064A\u0629), pricePerDay (estimate if not visible, e.g. 1000), engine, transmission (\u0623\u0648\u062A\u0648\u0645\u0627\u062A\u064A\u0643\u064A or \u064A\u062F\u0648\u064A), caution (estimate, e.g. 5000), description (short marketing text in Arabic)." }
           ]
-        }]
+        }
       });
+      console.log("[AI Extract] Response received");
       const responseText = response.text;
-      const jsonMatch = responseText?.match(/\{[\s\S]*\}/);
+      if (!responseText) throw new Error("Empty response from AI");
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         return res.json(JSON.parse(jsonMatch[0]));
       }
       res.status(422).json({ error: "Could not extract structured data" });
     } catch (err) {
       console.error("AI Extraction Error:", err);
-      res.status(500).json({ error: "Failed to process image with AI" });
+      res.status(500).json({ error: err.message || "Failed to process image with AI" });
     }
   });
   app.post("/api/ai/chat", async (req, res) => {
     if (!ai) return res.status(500).json({ error: "Gemini API key not configured" });
     try {
       const { messages, history } = req.body;
+      console.log(`[AI Chat] Received message with ${history?.length || 0} history items`);
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
         contents: [
@@ -88,7 +99,7 @@ async function startServer() {
           { role: "user", parts: messages }
         ],
         config: {
-          systemInstruction: "\u0623\u0646\u062A \u0645\u0633\u0627\u0639\u062F \u0630\u0643\u064A \u0644\u0645\u062F\u064A\u0631 \u062A\u0637\u0628\u064A\u0642 \u062A\u0623\u062C\u064A\u0631 \u0633\u064A\u0627\u0631\u0627\u062A \u0641\u062E\u0645\u0629 \u0641\u064A \u0627\u0644\u0645\u063A\u0631\u0628. \u064A\u0645\u0643\u0646\u0643 \u0627\u0642\u062A\u0631\u0627\u062D \u062A\u0641\u0627\u0635\u064A\u0644 \u0627\u0644\u0633\u064A\u0627\u0631\u0627\u062A \u0645\u0646 \u0627\u0644\u0635\u0648\u0631 \u0628\u062F\u0642\u0629. \u0623\u0633\u0645\u0627\u0621 \u0627\u0644\u0641\u0626\u0627\u062A \u0647\u064A: Luxury \u0627\u0644\u0645\u062A\u0645\u064A\u0632\u0629\u060C \u0639\u0627\u0626\u0644\u064A\u0629 SUV\u060C \u0627\u0642\u062A\u0635\u0627\u062F\u064A\u0629\u060C \u0631\u064A\u0627\u0636\u064A\u0629. \u064A\u062C\u0628 \u0639\u0644\u064A\u0643 \u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0623\u062F\u0627\u0629 addCarToDatabase \u0625\u0630\u0627 \u0637\u0644\u0628 \u0645\u0646\u0643 \u0630\u0644\u0643 \u0623\u0648 \u0625\u0630\u0627 \u0643\u0627\u0646 \u0627\u0644\u0647\u062F\u0641 \u0645\u0646 \u0627\u0644\u0645\u062D\u0627\u062F\u062B\u0629 \u0647\u0648 \u0625\u0636\u0627\u0641\u0629 \u0633\u064A\u0627\u0631\u0629 \u0645\u0646 \u0635\u0648\u0631\u0629. \u0627\u0643\u062A\u0628 \u0648\u0635\u0641\u0627\u064B \u062C\u0630\u0627\u0628\u0627\u064B \u0644\u0644\u0633\u064A\u0627\u0631\u0627\u062A \u0628\u0627\u0644\u0644\u063A\u0629 \u0627\u0644\u0639\u0631\u0628\u064A\u0629.",
+          systemInstruction: "\u0623\u0646\u062A \u0645\u0633\u0627\u0639\u062F \u0630\u0643\u064A \u0644\u0645\u062F\u064A\u0631 \u062A\u0637\u0628\u064A\u0642 \u062A\u0623\u062C\u064A\u0631 \u0633\u064A\u0627\u0631\u0627\u062A \u0641\u062E\u0645\u0629 \u0641\u064A \u0627\u0644\u0645\u063A\u0631\u0628. \n\u0639\u0646\u062F \u0627\u0633\u062A\u0644\u0627\u0645 \u0635\u0648\u0631\u0629 \u0633\u064A\u0627\u0631\u0629\u060C \u0642\u0645 \u0628\u0627\u0633\u062A\u062E\u0631\u0627\u062C \u062A\u0641\u0627\u0635\u064A\u0644\u0647\u0627 (\u0627\u0644\u0645\u0627\u0631\u0643\u0629\u060C \u0627\u0644\u0645\u0648\u062F\u064A\u0644\u060C \u0627\u0644\u0633\u0646\u0629\u060C \u0627\u0644\u0641\u0626\u0629\u060C \u0627\u0644\u0633\u0639\u0631 \u0627\u0644\u0645\u0642\u062A\u0631\u062D\u060C \u0627\u0644\u0645\u062D\u0631\u0643\u060C \u0646\u0627\u0642\u0644 \u0627\u0644\u062D\u0631\u0643\u0629\u060C \u0627\u0644\u0636\u0645\u0627\u0646\u060C \u0648\u0627\u0644\u0648\u0635\u0641). \n\u0627\u0639\u0631\u0636 \u0647\u0630\u0647 \u0627\u0644\u062A\u0641\u0627\u0635\u064A\u0644 \u0644\u0644\u0645\u0633\u062A\u062E\u062F\u0645 \u0623\u0648\u0644\u0627\u064B \u0641\u064A \u0631\u0633\u0627\u0644\u0629 \u0648\u0627\u0636\u062D\u0629 \u0648\u0645\u0646\u0633\u0642\u0629 \u0648\u0627\u0633\u0623\u0644\u0647 \u0625\u0630\u0627 \u0643\u0627\u0646\u062A \u0635\u062D\u064A\u062D\u0629 \u0623\u0648 \u0625\u0630\u0627 \u0643\u0627\u0646 \u064A\u0631\u064A\u062F \u062A\u0639\u062F\u064A\u0644 \u0623\u064A \u0645\u0646\u0647\u0627. \n\u0644\u0627 \u062A\u0642\u0645 \u0628\u0627\u0633\u062A\u062F\u0639\u0627\u0621 \u0623\u062F\u0627\u0629 addCarToDatabase \u0623\u0628\u062F\u0627\u064B \u0625\u0644\u0627 \u0628\u0639\u062F \u0623\u0646 \u064A\u0637\u0644\u0628 \u0645\u0646\u0643 \u0627\u0644\u0645\u0633\u062A\u062E\u062F\u0645 \u0630\u0644\u0643 \u0635\u0631\u0627\u062D\u0629 (\u0645\u062B\u0644\u0627\u064B: '\u0623\u0636\u0641\u0647\u0627'\u060C '\u062A\u0645'\u060C '\u0627\u062D\u0641\u0638\u0647\u0627'). \n\u0625\u0630\u0627 \u0637\u0644\u0628 \u0627\u0644\u0645\u0633\u062A\u062E\u062F\u0645 \u062A\u0639\u062F\u064A\u0644 \u0623\u064A \u0645\u0639\u0644\u0648\u0645\u0629\u060C \u0642\u0645 \u0628\u062A\u062D\u062F\u064A\u062B \u0628\u064A\u0627\u0646\u0627\u062A\u0643 \u0648\u0627\u0639\u0631\u0636\u0647\u0627 \u0645\u062C\u062F\u062F\u0627\u064B \u0644\u0644\u062A\u0623\u0643\u064A\u062F. \n\u0627\u062C\u0639\u0644 \u0627\u0644\u0648\u0635\u0641 \u062C\u0630\u0627\u0628\u0627\u064B \u0648\u0628\u0627\u0644\u0644\u063A\u0629 \u0627\u0644\u0639\u0631\u0628\u064A\u0629.",
           tools: [{
             functionDeclarations: [{
               name: "addCarToDatabase",
@@ -112,12 +123,14 @@ async function startServer() {
           }]
         }
       });
-      const functionCalls = response.functionCalls;
-      const text = response.text;
-      res.json({ text, functionCalls });
+      console.log("[AI Chat] Response received", { hasText: !!response.text, hasFunctionCalls: !!response.functionCalls });
+      res.json({
+        text: response.text,
+        functionCalls: response.functionCalls
+      });
     } catch (err) {
       console.error("AI Chat Error:", err);
-      res.status(500).json({ error: "Failed to process chat with AI" });
+      res.status(500).json({ error: err.message || "Failed to process chat with AI" });
     }
   });
   app.post("/api/send-confirmation-email", async (req, res) => {
