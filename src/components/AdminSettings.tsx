@@ -293,7 +293,6 @@ export function AdminSettings() {
             />
           </div>
         </div>
-        </div>
 
         <button 
           type="submit" 
