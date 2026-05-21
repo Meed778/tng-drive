@@ -3,7 +3,7 @@ import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { Car } from '../services/carsData';
 import { useSettings } from '../services/useSettings';
-import { Search, SlidersHorizontal, X, ChevronDown, ChevronUp, Phone, MapPin, Mail, Shield, Fuel, Gauge, CreditCard, Car, Users, Clock, CheckCircle, ShieldCheck, Truck, Baby, Map, Star, Award, TrendingUp, HeadphonesIcon, LucideIcon } from 'lucide-react';
+import { Search, SlidersHorizontal, X, ChevronDown, ChevronUp, Phone, MapPin, Mail, Shield, Fuel, Gauge, CreditCard, Car, Users, Clock, CheckCircle, Truck, Baby, Map as MapIcon, Headphones } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface CarFleetProps {
@@ -276,10 +276,10 @@ export function CarFleet({ onSelectCar, cars }: CarFleetProps) {
           {[
             { icon: Truck, title: "توصيل المطار", desc: "توصيل واستلام مجاني من وإلى مطار طنجة ابن بطوطة" },
             { icon: Users, title: "سائق إضافي", desc: "إمكانية إضافة سائق ثانٍ بتكلفة رمزية" },
-            { icon: Baby, title: "كرسي أطفال", desc: "كراسي أطفال مجانية حسب التوفر" },
-            { icon: Map, title: "GPS مدمج", desc: "نظام ملاحة GPS لترشدك في كل مكان" },
+            { icon: Car, title: "كرسي أطفال", desc: "كراسي أطفال مجانية حسب التوفر" },
+            { icon: MapIcon, title: "GPS مدمج", desc: "نظام ملاحة GPS لترشدك في كل مكان" },
             { icon: Clock, title: "خدمة 24/7", desc: "فريق دعم متاح على مدار الساعة للطوارئ" },
-            { icon: ShieldCheck, title: "سيارات معقمة", desc: "تعقيم شامل للسيارات قبل وبعد كل استئجار" },
+            { icon: Shield, title: "سيارات معقمة", desc: "تعقيم شامل للسيارات قبل وبعد كل استئجار" },
           ].map((svc, idx) => (
             <div key={idx} className="bg-[#141414] border border-white/5 p-8 group hover:border-[#C5A059]/30 transition-all duration-500">
               <div className="w-14 h-14 border border-[#C5A059]/30 flex items-center justify-center mb-6 group-hover:bg-[#C5A059] group-hover:text-[#0A0A0A] transition-all">
@@ -329,7 +329,7 @@ export function CarFleet({ onSelectCar, cars }: CarFleetProps) {
           </div>
           <div className="bg-[#141414] border border-white/5 p-6">
             <div className="flex items-center gap-3 mb-4">
-              <HeadphonesIcon className="w-5 h-5 text-[#C5A059]" />
+              <Users className="w-5 h-5 text-[#C5A059]" />
               <h4 className="text-sm font-bold text-white uppercase tracking-widest">شروط السائق</h4>
             </div>
             <p className="text-white/50 text-xs leading-relaxed whitespace-pre-line">{settings.driverRequirements}</p>
