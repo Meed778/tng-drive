@@ -12,6 +12,19 @@ export interface SiteSettings {
   address: string;
   instagramUrl: string;
   instagramHandle: string;
+  facebookUrl: string;
+  tiktokUrl: string;
+  youtubeUrl: string;
+  aboutTitle: string;
+  aboutText: string;
+  termsText: string;
+  insuranceText: string;
+  fuelPolicy: string;
+  mileagePolicy: string;
+  driverRequirements: string;
+  paymentMethods: string;
+  cancellationPolicy: string;
+  additionalServices: string;
 }
 
 const defaultSettings: SiteSettings = {
@@ -24,6 +37,19 @@ const defaultSettings: SiteSettings = {
   address: "شارع محمد الخامس، وسط المدينة\nطنجة، المغرب 90000",
   instagramUrl: "https://www.instagram.com/tng_drive?igsh=MTRmcDl5YzZvM2JjNg==",
   instagramHandle: "@tng_drive",
+  facebookUrl: "https://web.facebook.com/profile.php?id=61574586352895",
+  tiktokUrl: "https://www.tiktok.com/@tng_drive",
+  youtubeUrl: "",
+  aboutTitle: "من نحن",
+  aboutText: "TNG Drive هي شركة رائدة في مجال كراء السيارات بطنجة، المغرب. نقدم أسطولاً متنوعاً من السيارات الاقتصادية والفاخرة لتناسب جميع احتياجاتكم. مع خدمة توصيل مجانية للمطار ودعم فني على مدار الساعة، نضمن لكم تجربة كراء سلسة ومريحة.",
+  termsText: "• يجب أن لا يقل عمر السائق عن 21 سنة.\n• تقديم رخصة سياقة سارية المفعول (سائحون: رخصة دولية أو رخصة أصلية مع بطاقة التعريف).\n• إيداع شيك أو مبلغ نقدي كتأمين (Caution) حسب فئة السيارة.\n• يمنع تدخين السجائر أو الشيشة داخل السيارة.\n• يمنع قيادة السيارة خارج المغرب دون إذن مسبق.\n• الإلتزام بقوانين السير وعدم تجاوز السرعة المحددة.\n• في حالة المخالفات المرورية، يتحمل السائق المسؤولية كاملة.",
+  insuranceText: "جميع سياراتنا مؤمنة بالكامل ضد الغير. يمكنكم إضافة تأمين شامل يغطي الأضرار الخاصة والسرقة والحرائق بتكلفة إضافية رمزية. الاستفادة من التأمين تتطلب الإبلاغ الفوري عن أي حادث وملء محضر شرطة.",
+  fuelPolicy: "تستلم السيارة بخزان ممتلئ ويجب إعادتها بنفس الحالة. في حال إعادتها بخزان غير ممتلئ، سيتم خصم قيمة الوقود الناقص مع رسوم خدمة إضافية.",
+  mileagePolicy: "جميع سياراتنا بدون حدود للكيلومترات (كيلومترات غير محدودة) لتستمتع برحلتك بحرية تامة.",
+  driverRequirements: "• السن الأدنى: 21 سنة (قد تختلف حسب فئة السيارة).\n• رخصة سياقة سارية المفعول (سائحون: رخصة دولية مطلوبة).\n• بطاقة تعريف وطنية أو جواز سفر.\n• إيداع تأمين نقدي (Caution) حسب فئة السيارة.\n• للسيارات الفاخرة: السن الأدنى 25 سنة.",
+  paymentMethods: "طرق الدفع المتاحة: الدفع نقداً (درهم)، التحويل البنكي، وبطاقات الائتمان (Visa, Mastercard).",
+  cancellationPolicy: "• إلغاء الحجز مجاني تماماً قبل 48 ساعة من موعد الاستلام.\n• الإلغاء خلال 24-48 ساعة: خصم 25% من قيمة الحجز.\n• الإلغاء خلال أقل من 24 ساعة: خصم 50%.\n• في حالة عدم الحضور (No Show): خصم كامل قيمة اليوم الأول.",
+  additionalServices: "• توصيل مجاني من وإلى مطار طنجة ابن بطوطة.\n• سائق إضافي: 50 درهماً إضافياً في اليوم.\n• كرسي أطفال: مجاناً (حسب التوفر).\n• نظام تحديد المواقع GPS: 30 درهماً في اليوم.\n• توصيل السيارة إلى الفندق: مجاناً داخل طنجة.\n• خدمة 24/7 للطوارئ والمساعدات.",
 };
 
 const SettingsContext = createContext<{settings: SiteSettings, loading: boolean}>({settings: defaultSettings, loading: true});

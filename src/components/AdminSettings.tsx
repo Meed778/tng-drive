@@ -159,7 +159,140 @@ export function AdminSettings() {
                 className="w-full bg-[#141414] border border-white/10 p-3 text-sm text-white font-mono focus:border-[#C5A059] outline-none" 
               />
             </div>
+            <div>
+              <label className="block text-[10px] uppercase text-white/40 mb-2 tracking-wider">رابط فيسبوك (Facebook)</label>
+              <input 
+                type="url" 
+                name="facebookUrl" 
+                value={formData.facebookUrl} 
+                onChange={handleChange}
+                dir="ltr"
+                className="w-full bg-[#141414] border border-white/10 p-3 text-sm text-white font-mono focus:border-[#C5A059] outline-none" 
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase text-white/40 mb-2 tracking-wider">رابط تيك توك (TikTok)</label>
+              <input 
+                type="url" 
+                name="tiktokUrl" 
+                value={formData.tiktokUrl} 
+                onChange={handleChange}
+                dir="ltr"
+                className="w-full bg-[#141414] border border-white/10 p-3 text-sm text-white font-mono focus:border-[#C5A059] outline-none" 
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase text-white/40 mb-2 tracking-wider">رابط يوتيوب (YouTube)</label>
+              <input 
+                type="url" 
+                name="youtubeUrl" 
+                value={formData.youtubeUrl} 
+                onChange={handleChange}
+                dir="ltr"
+                className="w-full bg-[#141414] border border-white/10 p-3 text-sm text-white font-mono focus:border-[#C5A059] outline-none" 
+              />
+            </div>
           </div>
+        </div>
+
+        <div className="bg-[#0A0A0A] border border-white/5 p-6 space-y-6">
+          <h3 className="text-xl font-serif text-white mb-4 border-b border-white/5 pb-4">قسم من نحن</h3>
+          <div>
+            <label className="block text-[10px] uppercase text-white/40 mb-2 tracking-wider">العنوان</label>
+            <input 
+              type="text" 
+              name="aboutTitle" 
+              value={formData.aboutTitle} 
+              onChange={handleChange}
+              className="w-full bg-[#141414] border border-white/10 p-3 text-sm text-white focus:border-[#C5A059] outline-none" 
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] uppercase text-white/40 mb-2 tracking-wider">النص</label>
+            <textarea 
+              name="aboutText" 
+              value={formData.aboutText} 
+              onChange={handleChange}
+              className="w-full bg-[#141414] border border-white/10 p-3 text-sm text-white focus:border-[#C5A059] outline-none h-24 resize-none" 
+            />
+          </div>
+        </div>
+
+        <div className="bg-[#0A0A0A] border border-white/5 p-6 space-y-6">
+          <h3 className="text-xl font-serif text-white mb-4 border-b border-white/5 pb-4">الشروط والسياسات</h3>
+          <div>
+            <label className="block text-[10px] uppercase text-white/40 mb-2 tracking-wider">شروط الإلغاء (Cancellation Policy)</label>
+            <textarea 
+              name="cancellationPolicy" 
+              value={formData.cancellationPolicy} 
+              onChange={handleChange}
+              className="w-full bg-[#141414] border border-white/10 p-3 text-sm text-white focus:border-[#C5A059] outline-none h-24 resize-none" 
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] uppercase text-white/40 mb-2 tracking-wider">سياسة التأمين (Insurance)</label>
+            <textarea 
+              name="insuranceText" 
+              value={formData.insuranceText} 
+              onChange={handleChange}
+              className="w-full bg-[#141414] border border-white/10 p-3 text-sm text-white focus:border-[#C5A059] outline-none h-24 resize-none" 
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] uppercase text-white/40 mb-2 tracking-wider">سياسة الوقود (Fuel Policy)</label>
+            <textarea 
+              name="fuelPolicy" 
+              value={formData.fuelPolicy} 
+              onChange={handleChange}
+              className="w-full bg-[#141414] border border-white/10 p-3 text-sm text-white focus:border-[#C5A059] outline-none h-24 resize-none" 
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] uppercase text-white/40 mb-2 tracking-wider">الحد الأقصى للكيلومترات (Mileage)</label>
+            <textarea 
+              name="mileagePolicy" 
+              value={formData.mileagePolicy} 
+              onChange={handleChange}
+              className="w-full bg-[#141414] border border-white/10 p-3 text-sm text-white focus:border-[#C5A059] outline-none h-24 resize-none" 
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] uppercase text-white/40 mb-2 tracking-wider">شروط السائق (Driver Requirements)</label>
+            <textarea 
+              name="driverRequirements" 
+              value={formData.driverRequirements} 
+              onChange={handleChange}
+              className="w-full bg-[#141414] border border-white/10 p-3 text-sm text-white focus:border-[#C5A059] outline-none h-24 resize-none" 
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] uppercase text-white/40 mb-2 tracking-wider">طرق الدفع (Payment Methods)</label>
+            <textarea 
+              name="paymentMethods" 
+              value={formData.paymentMethods} 
+              onChange={handleChange}
+              className="w-full bg-[#141414] border border-white/10 p-3 text-sm text-white focus:border-[#C5A059] outline-none h-24 resize-none" 
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] uppercase text-white/40 mb-2 tracking-wider">الخدمات الإضافية (Additional Services)</label>
+            <textarea 
+              name="additionalServices" 
+              value={formData.additionalServices} 
+              onChange={handleChange}
+              className="w-full bg-[#141414] border border-white/10 p-3 text-sm text-white focus:border-[#C5A059] outline-none h-24 resize-none" 
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] uppercase text-white/40 mb-2 tracking-wider">شروط عامة (Terms & Conditions)</label>
+            <textarea 
+              name="termsText" 
+              value={formData.termsText} 
+              onChange={handleChange}
+              className="w-full bg-[#141414] border border-white/10 p-3 text-sm text-white focus:border-[#C5A059] outline-none h-32 resize-none" 
+            />
+          </div>
+        </div>
         </div>
 
         <button 
