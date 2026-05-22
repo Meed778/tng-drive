@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs, addDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../services/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '../services/firebase';
 import { Car } from '../services/carsData';
-import { Trash2, AlertTriangle, X, Link, ImagePlus } from 'lucide-react';
+import { Trash2, AlertTriangle, X, Link, ImagePlus, Upload, AlertCircle } from 'lucide-react';
+import { resizeImage } from '../lib/imageUtils';
 
 export function AdminCars() {
   const [cars, setCars] = useState<Car[]>([]);
@@ -76,11 +78,34 @@ export function AdminCars() {
     }
   };
 
+  const [uploadError, setUploadError] = useState('');
+
   const addImageUrl = () => {
     const val = newUrlInput.trim();
     if (val && (val.startsWith('http://') || val.startsWith('https://'))) {
       setImageUrls([...imageUrls, val]);
       setNewUrlInput('');
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploadError('');
+    setIsUploading(true);
+    try {
+      for (const file of Array.from(files)) {
+        const storageRef = ref(storage, `cars/${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name}`);
+        const resizedBlob = await resizeImage(file);
+        const snapshot = await uploadBytes(storageRef, resizedBlob);
+        const url = await getDownloadURL(snapshot.ref);
+        setImageUrls(prev => [...prev, url]);
+      }
+    } catch (err: any) {
+      console.error("Upload error:", err);
+      setUploadError(`فشل رفع الصورة: ${err.message}. استخدم خيار الرابط المباشر كبديل.`);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -132,7 +157,7 @@ export function AdminCars() {
               {imageUrls.length === 0 && (
                 <div className="col-span-full flex items-center gap-2 text-white/30 text-xs py-4">
                   <ImagePlus className="w-4 h-4" />
-                  <span>لم تضف أي صور بعد. أضف روابط صور أدناه.</span>
+                  <span>لم تضف أي صور بعد.</span>
                 </div>
               )}
               {imageUrls.map((url, idx) => (
@@ -152,13 +177,29 @@ export function AdminCars() {
                   )}
                 </div>
               ))}
+
+              {/* Upload from computer */}
+              <label className="aspect-video border-2 border-dashed border-white/10 rounded flex flex-col items-center justify-center cursor-pointer hover:border-[#C5A059]/50 transition-colors">
+                <input type="file" multiple accept="image/*" onChange={handleFileChange} className="hidden" disabled={isUploading} />
+                <Upload className={`w-6 h-6 ${isUploading ? 'text-[#C5A059] animate-bounce' : 'text-white/30'}`} />
+                <p className="text-[10px] text-white/30 mt-1 uppercase tracking-widest">
+                  {isUploading ? 'جاري الرفع...' : 'رفع صور'}
+                </p>
+              </label>
             </div>
+
+            {uploadError && (
+              <div className="flex items-start gap-2 bg-red-900/20 border border-red-500/30 p-3 mb-4 rounded">
+                <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                <p className="text-red-400 text-xs">{uploadError}</p>
+              </div>
+            )}
 
             <div className="flex gap-2">
               <input 
                 value={newUrlInput}
                 onChange={(e) => setNewUrlInput(e.target.value)}
-                placeholder="https://example.com/car-image.jpg" 
+                placeholder="أو أضف رابط صورة مباشرة: https://..." 
                 className="flex-1 bg-[#0A0A0A] border border-white/10 p-3 text-sm focus:border-[#C5A059] outline-none text-white text-left font-mono text-xs" 
                 dir="ltr" 
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addImageUrl(); } }}
@@ -167,15 +208,15 @@ export function AdminCars() {
                 <Link className="w-4 h-4 inline" /> إضافة
               </button>
             </div>
-            <p className="text-[10px] text-white/30 mt-2">ألصق رابط صورة ثم اضغط "إضافة" أو Enter. استخدم روابط من Unsplash أو أي موقع صور.</p>
+            <p className="text-[10px] text-white/30 mt-2">اختر صوراً من جهازك أو ألصق رابط صورة مباشر.</p>
           </div>
         </div>
         
         <textarea required placeholder="وصف للسيارة ومميزاتها..." value={description} onChange={e => setDescription(e.target.value)} className="col-span-full bg-[#141414] border border-white/10 p-3 text-sm focus:border-[#C5A059] outline-none text-white h-24 resize-none" />
         
-        <button type="submit" disabled={adding} className="col-span-full bg-[#C5A059] text-[#0A0A0A] font-bold py-3 hover:bg-white transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-          {adding ? 'جاري الإضافة...' : 'حفظ السيارة في الأسطول'}
-          {adding && <div className="w-4 h-4 border-2 border-[#0A0A0A]/20 border-t-[#0A0A0A] rounded-full animate-spin"></div>}
+        <button type="submit" disabled={adding || isUploading} className="col-span-full bg-[#C5A059] text-[#0A0A0A] font-bold py-3 hover:bg-white transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+          {adding ? 'جاري الإضافة...' : (isUploading ? 'جاري رفع الصور...' : 'حفظ السيارة في الأسطول')}
+          {(adding || isUploading) && <div className="w-4 h-4 border-2 border-[#0A0A0A]/20 border-t-[#0A0A0A] rounded-full animate-spin"></div>}
         </button>
       </form>
 
