@@ -294,6 +294,38 @@ export function AdminSettings() {
           </div>
         </div>
 
+        <div className="bg-[#0A0A0A] border border-white/5 p-6 space-y-6">
+          <h3 className="text-xl font-serif text-white mb-4 border-b border-white/5 pb-4">إعدادات رفع الصور (Cloudinary)</h3>
+          <p className="text-white/40 text-xs mb-4">
+            سجل مجاناً في <a href="https://cloudinary.com" target="_blank" rel="noopener noreferrer" className="text-[#C5A059] underline">cloudinary.com</a>،
+            ثم اذهب إلى Settings > Upload > إنشاء Upload Preset (نوع Unsigned)، وانسخ الـ Cloud Name من Dashboard.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-[10px] uppercase text-white/40 mb-2 tracking-wider">Cloud Name</label>
+              <input 
+                type="text" 
+                name="cloudinaryCloudName" 
+                value={formData.cloudinaryCloudName} 
+                onChange={handleChange}
+                dir="ltr"
+                className="w-full bg-[#141414] border border-white/10 p-3 text-sm text-white font-mono focus:border-[#C5A059] outline-none" 
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase text-white/40 mb-2 tracking-wider">Upload Preset (Unsigned)</label>
+              <input 
+                type="text" 
+                name="cloudinaryUploadPreset" 
+                value={formData.cloudinaryUploadPreset} 
+                onChange={handleChange}
+                dir="ltr"
+                className="w-full bg-[#141414] border border-white/10 p-3 text-sm text-white font-mono focus:border-[#C5A059] outline-none" 
+              />
+            </div>
+          </div>
+        </div>
+
         <button 
           type="submit" 
           disabled={saving}

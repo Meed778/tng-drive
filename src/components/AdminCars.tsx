@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { collection, getDocs, addDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '../services/firebase';
+import { db } from '../services/firebase';
 import { Car } from '../services/carsData';
+import { useSettings } from '../services/useSettings';
 import { Trash2, AlertTriangle, X, Link, ImagePlus, Upload, AlertCircle } from 'lucide-react';
-import { resizeImage } from '../lib/imageUtils';
 
 export function AdminCars() {
+  const { settings } = useSettings();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
@@ -93,19 +94,44 @@ export function AdminCars() {
     if (!files || files.length === 0) return;
     setUploadError('');
     setIsUploading(true);
+
+    const cloudName = settings.cloudinaryCloudName;
+    const uploadPreset = settings.cloudinaryUploadPreset;
+
+    if (!cloudName || !uploadPreset) {
+      setUploadError('لم يتم إعداد Cloudinary بعد. اذهب إلى الإعدادات وأضف Cloud Name و Upload Preset.');
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
     try {
       for (const file of Array.from(files)) {
-        const storageRef = ref(storage, `cars/${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name}`);
-        const resizedBlob = await resizeImage(file);
-        const snapshot = await uploadBytes(storageRef, resizedBlob);
-        const url = await getDownloadURL(snapshot.ref);
-        setImageUrls(prev => [...prev, url]);
+        if (file.size > 10 * 1024 * 1024) {
+          setUploadError(`الصورة "${file.name}" كبيرة جداً (${Math.round(file.size/1024/1024)}MB). الحد الأقصى 10MB.`);
+          continue;
+        }
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', uploadPreset);
+
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+          method: 'POST',
+          body: formData,
+        });
+        const data = await res.json();
+        if (data.secure_url) {
+          setImageUrls(prev => [...prev, data.secure_url]);
+        } else {
+          throw new Error(data.error?.message || 'فشل الرفع');
+        }
       }
     } catch (err: any) {
       console.error("Upload error:", err);
       setUploadError(`فشل رفع الصورة: ${err.message}. استخدم خيار الرابط المباشر كبديل.`);
     } finally {
       setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -180,7 +206,7 @@ export function AdminCars() {
 
               {/* Upload from computer */}
               <label className="aspect-video border-2 border-dashed border-white/10 rounded flex flex-col items-center justify-center cursor-pointer hover:border-[#C5A059]/50 transition-colors">
-                <input type="file" multiple accept="image/*" onChange={handleFileChange} className="hidden" disabled={isUploading} />
+                <input ref={fileInputRef} type="file" multiple accept="image/*" onChange={handleFileChange} className="hidden" disabled={isUploading} />
                 <Upload className={`w-6 h-6 ${isUploading ? 'text-[#C5A059] animate-bounce' : 'text-white/30'}`} />
                 <p className="text-[10px] text-white/30 mt-1 uppercase tracking-widest">
                   {isUploading ? 'جاري الرفع...' : 'رفع صور'}

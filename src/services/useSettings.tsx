@@ -25,6 +25,8 @@ export interface SiteSettings {
   paymentMethods: string;
   cancellationPolicy: string;
   additionalServices: string;
+  cloudinaryCloudName: string;
+  cloudinaryUploadPreset: string;
 }
 
 const defaultSettings: SiteSettings = {
@@ -50,6 +52,8 @@ const defaultSettings: SiteSettings = {
   paymentMethods: "طرق الدفع المتاحة: الدفع نقداً (درهم)، التحويل البنكي، وبطاقات الائتمان (Visa, Mastercard).",
   cancellationPolicy: "• إلغاء الحجز مجاني تماماً قبل 48 ساعة من موعد الاستلام.\n• الإلغاء خلال 24-48 ساعة: خصم 25% من قيمة الحجز.\n• الإلغاء خلال أقل من 24 ساعة: خصم 50%.\n• في حالة عدم الحضور (No Show): خصم كامل قيمة اليوم الأول.",
   additionalServices: "• توصيل مجاني من وإلى مطار طنجة ابن بطوطة.\n• سائق إضافي: 50 درهماً إضافياً في اليوم.\n• كرسي أطفال: مجاناً (حسب التوفر).\n• نظام تحديد المواقع GPS: 30 درهماً في اليوم.\n• توصيل السيارة إلى الفندق: مجاناً داخل طنجة.\n• خدمة 24/7 للطوارئ والمساعدات.",
+  cloudinaryCloudName: "",
+  cloudinaryUploadPreset: "",
 };
 
 const SettingsContext = createContext<{settings: SiteSettings, loading: boolean}>({settings: defaultSettings, loading: true});
