@@ -18,8 +18,7 @@ jobs:
       - name: Install and Build 🔧
         run: |
           npm ci
-          npx tsc --noEmit 2>&1 || true
-          npm run build 2>&1
+          npm run build
           touch dist/.nojekyll
 
       - name: Deploy 🚀
