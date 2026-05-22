@@ -3,7 +3,7 @@ import { collection, getDocs, addDoc, deleteDoc, doc, serverTimestamp } from 'fi
 import { db } from '../services/firebase';
 import { Car } from '../services/carsData';
 import { useSettings } from '../services/useSettings';
-import { Trash2, AlertTriangle, X, Link, ImagePlus, Upload, AlertCircle } from 'lucide-react';
+import { Trash2, AlertTriangle, X, Link, ImagePlus, Upload, CircleAlert } from 'lucide-react';
 
 export function AdminCars() {
   const { settings } = useSettings();
@@ -216,7 +216,7 @@ export function AdminCars() {
 
             {uploadError && (
               <div className="flex items-start gap-2 bg-red-900/20 border border-red-500/30 p-3 mb-4 rounded">
-                <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                <CircleAlert className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
                 <p className="text-red-400 text-xs">{uploadError}</p>
               </div>
             )}
