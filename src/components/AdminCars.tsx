@@ -3,7 +3,7 @@ import { collection, getDocs, addDoc, deleteDoc, doc, serverTimestamp } from 'fi
 import { db } from '../services/firebase';
 import { Car } from '../services/carsData';
 import { useSettings } from '../services/useSettings';
-import { Trash2, AlertTriangle, X, Link, ImagePlus, Upload, CircleAlert } from 'lucide-react';
+import { Trash2, TriangleAlert, X, Link, ImagePlus, Upload, CircleAlert } from 'lucide-react';
 
 export function AdminCars() {
   const { settings } = useSettings();
@@ -284,7 +284,7 @@ export function AdminCars() {
 
             <div className="flex flex-col items-center text-center">
               <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-6">
-                <AlertTriangle className="text-red-500" size={32} />
+                <TriangleAlert className="text-red-500" size={32} />
               </div>
               
               <h3 className="text-2xl font-serif text-white mb-4">تأكيد الحذف</h3>
