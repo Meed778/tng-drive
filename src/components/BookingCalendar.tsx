@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DayPicker, DateRange } from 'react-day-picker';
 import { format, eachDayOfInterval, isWithinInterval, startOfDay } from 'date-fns';
-import 'react-day-picker/style.css';
+import 'react-day-picker/dist/style.css'; // Add CSS
 import { collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { useAuth } from '../services/useAuth';

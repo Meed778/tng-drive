@@ -298,7 +298,7 @@ export function AdminSettings() {
           <h3 className="text-xl font-serif text-white mb-4 border-b border-white/5 pb-4">إعدادات رفع الصور (Cloudinary)</h3>
           <p className="text-white/40 text-xs mb-4">
             سجل مجاناً في <a href="https://cloudinary.com" target="_blank" rel="noopener noreferrer" className="text-[#C5A059] underline">cloudinary.com</a>،
-            ثم اذهب إلى Settings > Upload > إنشاء Upload Preset (نوع Unsigned)، وانسخ الـ Cloud Name من Dashboard.
+            ثم اذهب إلى Settings &gt; Upload &gt; إنشاء Upload Preset (نوع Unsigned)، وانسخ الـ Cloud Name من Dashboard.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>

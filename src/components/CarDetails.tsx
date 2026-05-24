@@ -97,7 +97,6 @@ export function CarDetails({ car, onBack }: CarDetailsProps) {
                 <img 
                   src={carImages[activeImageIndex]} 
                   alt={`${car.model} - view ${activeImageIndex + 1}`} 
-                  loading="lazy"
                   referrerPolicy="no-referrer" 
                   className="object-cover w-full h-full opacity-70 transition-opacity duration-500" 
                 />
