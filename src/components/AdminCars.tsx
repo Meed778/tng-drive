@@ -5,6 +5,9 @@ import { Car } from '../services/carsData';
 import { useSettings } from '../services/useSettings';
 import { Trash2, TriangleAlert, X, Link, ImagePlus, Upload, CircleAlert } from 'lucide-react';
 
+const FALLBACK_IMG_SMALL = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect fill=%22%23333%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2210%22%3E%26%231605;&%23273;&%2322;&%231575;%3C/text%3E%3C/svg%3E';
+const FALLBACK_IMG_THUMB = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 60%22%3E%3Crect fill=%22%23333%22 width=%22100%22 height=%2260%22/%3E%3Ctext x=%2250%22 y=%2235%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%228%22%3E%26%1575;&%1604;&%1578;&%1608;&%1580;&%1583;%20%1589;&%1608;&%1585;&%1577;%3C/text%3E%3C/svg%3E';
+
 export function AdminCars() {
   const { settings } = useSettings();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -165,7 +168,7 @@ export function AdminCars() {
       </div>
 
       <form onSubmit={handleAdd} className="bg-[#0A0A0A] border border-[#C5A059]/30 p-6 mb-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <h3 className="col-span-full text-lgtext-[#C5A059] mb-2">إضافة سيارة جديدة</h3>
+        <h3 className="col-span-full text-lg text-[#C5A059] mb-2">إضافة سيارة جديدة</h3>
         
         <input required placeholder="الماركة (مثل: Range Rover)" value={brand} onChange={e => setBrand(e.target.value)} className="bg-[#141414] border border-white/10 p-3 text-sm focus:border-[#C5A059] outline-none text-white" />
         <input required placeholder="الموديل (مثل: Velar)" value={model} onChange={e => setModel(e.target.value)} className="bg-[#141414] border border-white/10 p-3 text-sm focus:border-[#C5A059] outline-none text-white" />
@@ -188,7 +191,7 @@ export function AdminCars() {
               )}
               {imageUrls.map((url, idx) => (
                 <div key={idx} className="relative aspect-video border border-white/10 rounded overflow-hidden group">
-                  <img src={url} alt={`Preview ${idx}`} referrerPolicy="no-referrer" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23333" width="100" height="100"/><text x="50" y="55" text-anchor="middle" fill="%23666" font-size="10">خطأ</text></svg>' }} />
+                  <img src={url} alt={`Preview ${idx}`} referrerPolicy="no-referrer" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG_SMALL }} />
                   <button 
                     type="button"
                     onClick={() => setImageUrls(imageUrls.filter((_, i) => i !== idx))}
@@ -252,7 +255,7 @@ export function AdminCars() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {cars.map(c => (
             <div key={c.id} className="flex gap-4 border border-white/5 bg-[#0A0A0A] p-4 items-center">
-              <img src={c.imageUrl} alt={c.model} loading="lazy" referrerPolicy="no-referrer" className="w-24 h-16 object-cover bg-white/5" onError={(e) => { (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 60"><rect fill="%23333" width="100" height="60"/><text x="50" y="35" text-anchor="middle" fill="%23666" font-size="8">لا توجد صورة</text></svg>' }} />
+              <img src={c.imageUrl} alt={c.model} loading="lazy" referrerPolicy="no-referrer" className="w-24 h-16 object-cover bg-white/5" onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMG_THUMB }} />
               <div className="flex-1">
                 <h4 className="font-serif text-lg">{c.brand} {c.model}</h4>
                 <p className="text-xs text-white/50">{c.category} • {c.pricePerDay} درهم/يوم</p>
