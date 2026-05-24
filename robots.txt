@@ -1,4 +1,0 @@
-# TNG Drive - Car Rental Tangier
-User-agent: *
-Allow: /
-Sitemap: https://meed778.github.io/tng-drive/sitemap.xml
