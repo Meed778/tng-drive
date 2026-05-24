@@ -1,12 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { collection, getDocs, addDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, addDoc, deleteDoc, doc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { Car } from '../services/carsData';
 import { useSettings } from '../services/useSettings';
-import { Trash2, TriangleAlert, X, Link, ImagePlus, Upload, CircleAlert } from 'lucide-react';
+import { Trash2, TriangleAlert, X, Link, ImagePlus, Upload, CircleAlert, Sparkles, Pencil } from 'lucide-react';
 
 const FALLBACK_IMG_SMALL = 'data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20fill%3D%22%23333%22%20width%3D%22100%22%20height%3D%22100%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2255%22%20text-anchor%3D%22middle%22%20fill%3D%22%23666%22%20font-size%3D%2210%22%3E%D8%AE%D8%B7%D8%A3%3C%2Ftext%3E%3C%2Fsvg%3E';
 const FALLBACK_IMG_THUMB = 'data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%2060%22%3E%3Crect%20fill%3D%22%23333%22%20width%3D%22100%22%20height%3D%2260%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2235%22%20text-anchor%3D%22middle%22%20fill%3D%22%23666%22%20font-size%3D%228%22%3E%D9%84%D8%A7%20%D8%AA%D9%88%D8%AC%D8%AF%20%D8%B5%D9%88%D8%B1%D8%A9%3C%2Ftext%3E%3C%2Fsvg%3E';
+
+// Helper to convert Local File to Base64
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        const base64 = reader.result.split(',')[1];
+        resolve(base64);
+      } else {
+        reject(new Error("Failed to read file as base64"));
+      }
+    };
+    reader.onerror = error => reject(error);
+  });
+};
 
 export function AdminCars() {
   const { settings } = useSettings();
@@ -16,6 +33,13 @@ export function AdminCars() {
   const [adding, setAdding] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   
+  // AI extraction state
+  const [isAiExtracting, setIsAiExtracting] = useState(false);
+  const [aiError, setAiError] = useState('');
+
+  // Edit mode tracking state
+  const [editingCarId, setEditingCarId] = useState<string | null>(null);
+
   // Deletion modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [carToDelete, setCarToDelete] = useState<Car | null>(null);
@@ -51,7 +75,70 @@ export function AdminCars() {
     fetchCars();
   }, []);
 
-  const handleAdd = async (e: React.FormEvent) => {
+  // AI Details extraction
+  const extractCarDetails = async (file: File) => {
+    setIsAiExtracting(true);
+    setAiError('');
+    try {
+      const base64 = await fileToBase64(file);
+      const res = await fetch('/api/ai/extract', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          imageBase64: base64,
+          mimeType: file.type || 'image/jpeg'
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error('فشلت عملية معالجة وحفظ البيانات بالذكاء الاصطناعي');
+      }
+
+      const aiData = await res.json();
+      if (aiData) {
+        if (aiData.brand) setBrand(aiData.brand);
+        if (aiData.model) setModel(aiData.model);
+        if (aiData.year) setYear(String(aiData.year));
+        if (aiData.category) setCategory(aiData.category);
+        if (aiData.pricePerDay) setPricePerDay(String(aiData.pricePerDay));
+        if (aiData.engine) setEngine(aiData.engine);
+        if (aiData.transmission) setTransmission(aiData.transmission);
+        if (aiData.caution) setCaution(String(aiData.caution));
+        if (aiData.description) setDescription(aiData.description);
+      }
+    } catch (err: any) {
+      console.error("AI parse error:", err);
+      setAiError('فشلت محاولة تعبئة التفاصيل تلقائياً بالذكاء الاصطناعي، يرجى ملء الخانات يدوياً.');
+    } finally {
+      setIsAiExtracting(false);
+    }
+  };
+
+  const cancelEditing = () => {
+    setEditingCarId(null);
+    setBrand(''); setModel(''); setYear(''); setCategory('');
+    setPricePerDay(''); setEngine(''); setTransmission('');
+    setCaution(''); setDescription(''); setImageUrls([]);
+  };
+
+  const startEditing = (car: Car) => {
+    setEditingCarId(car.id);
+    setBrand(car.brand);
+    setModel(car.model || '');
+    setYear(String(car.year || ''));
+    setCategory(car.category || '');
+    setPricePerDay(String(car.pricePerDay || ''));
+    setEngine(car.engine || '');
+    setTransmission(car.transmission || '');
+    setCaution(String(car.caution || ''));
+    setDescription(car.description || '');
+    setImageUrls(car.images || (car.imageUrl ? [car.imageUrl] : []));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setAdding(true);
     try {
@@ -60,23 +147,41 @@ export function AdminCars() {
         return;
       }
 
-      const newCar = {
-        brand, model, year: parseInt(year), category, 
-        pricePerDay: parseFloat(pricePerDay), engine, transmission, 
-        caution: parseFloat(caution), description, 
+      const carData = {
+        brand,
+        model,
+        year: parseInt(year) || 0,
+        category, 
+        pricePerDay: parseFloat(pricePerDay) || 0,
+        engine,
+        transmission, 
+        caution: parseFloat(caution) || 0,
+        description, 
         imageUrl: imageUrls[0], // First image is thumbnail
         images: imageUrls,
-        createdAt: serverTimestamp()
       };
-      const docRef = await addDoc(collection(db, 'cars'), newCar);
-      setCars([...cars, { id: docRef.id, ...newCar } as any]);
-      
-      // Reset
-      setBrand(''); setModel(''); setYear(''); setCategory('');
-      setPricePerDay(''); setEngine(''); setTransmission('');
-      setCaution(''); setDescription(''); setImageUrls([]);
+
+      if (editingCarId) {
+        // Mode: Update existing document
+        const updatedDoc = {
+          ...carData,
+          updatedAt: serverTimestamp()
+        };
+        await updateDoc(doc(db, 'cars', editingCarId), updatedDoc);
+        setCars(prevCars => prevCars.map(c => c.id === editingCarId ? { ...c, ...carData } as Car : c));
+        cancelEditing();
+      } else {
+        // Mode: Create new document
+        const newCar = {
+          ...carData,
+          createdAt: serverTimestamp()
+        };
+        const docRef = await addDoc(collection(db, 'cars'), newCar);
+        setCars(prevCars => [...prevCars, { id: docRef.id, ...newCar } as any]);
+        cancelEditing();
+      }
     } catch (err) {
-      console.error("Error adding car", err);
+      console.error("Error saving car", err);
     } finally {
       setAdding(false);
     }
@@ -98,18 +203,22 @@ export function AdminCars() {
     setUploadError('');
     setIsUploading(true);
 
+    const firstFile = files[0];
+    // Automatically extract details with AI concurrently!
+    extractCarDetails(firstFile);
+
     const cloudName = settings.cloudinaryCloudName;
     const uploadPreset = settings.cloudinaryUploadPreset;
 
     if (!cloudName || !uploadPreset) {
-      setUploadError('لم يتم إعداد Cloudinary بعد. اذهب إلى الإعدادات وأضف Cloud Name و Upload Preset.');
+      setUploadError('لم يتم إعداد Cloudinary بعد في الإعدادات لرفع الصور، ومع ذلك جاري تحليل الصورة بالذكاء الاصطناعي.');
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
     try {
-      for (const file of Array.from(files)) {
+      for (const file of Array.from(files) as File[]) {
         if (file.size > 10 * 1024 * 1024) {
           setUploadError(`الصورة "${file.name}" كبيرة جداً (${Math.round(file.size/1024/1024)}MB). الحد الأقصى 10MB.`);
           continue;
@@ -163,14 +272,49 @@ export function AdminCars() {
       <div className="flex justify-between items-end mb-8">
         <div>
           <h2 className="text-3xl font-serif text-[#C5A059] mb-2">إدارة أسطول السيارات</h2>
-          <p className="text-white/50 text-sm">إضافة وإزالة السيارات المتاحة للتأجير</p>
+          <p className="text-white/50 text-sm">إضافة وإزالة أو تعديل السيارات المتاحة للتأجير</p>
         </div>
       </div>
 
-      <form onSubmit={handleAdd} className="bg-[#0A0A0A] border border-[#C5A059]/30 p-6 mb-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <h3 className="col-span-full text-lg text-[#C5A059] mb-2">إضافة سيارة جديدة</h3>
+      <form onSubmit={handleSave} className="bg-[#0A0A0A] border border-[#C5A059]/30 p-6 mb-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="col-span-full flex flex-wrap justify-between items-center gap-2 mb-2">
+          <h3 className="text-lg text-[#C5A059] font-serif">
+            {editingCarId ? `تعديل تفاصيل السيارة: ${brand} ${model}` : 'إضافة سيارة جديدة'}
+          </h3>
+          {!editingCarId ? (
+            <span className="flex items-center gap-1.5 text-[10px] text-white/40 bg-white/5 px-2.5 py-1 rounded">
+              <Sparkles className="w-3.5 h-3.5 text-[#C5A059] animate-pulse" />
+              تعبئة تلقائية بالذكاء الاصطناعي نشطة مسبقاً ✨
+            </span>
+          ) : (
+            <span className="flex items-center gap-1.5 text-[10px] text-[#C5A059] bg-[#C5A059]/10 px-2.5 py-1 rounded border border-[#C5A059]/20">
+              وضعية التعديل اليدوي نشطة ✏️
+            </span>
+          )}
+        </div>
         
-        <input required placeholder="الماركة (مثل: Range Rover)" value={brand} onChange={e => setBrand(e.target.value)} className="bg-[#141414] border border-white/10 p-3 text-sm focus:border-[#C5A059] outline-none text-white" />
+        {isAiExtracting && (
+          <div className="col-span-full border border-[#C5A059]/30 bg-[#C5A059]/5 p-4 rounded-sm flex items-center gap-3 animate-pulse mb-2">
+            <Sparkles className="text-[#C5A059] animate-spin shrink-0" size={18} />
+            <p className="text-white text-xs">
+              <strong>جاري قراءة وتحليل مواصفات السيارة تلقائياً بالذكاء الاصطناعي...</strong> يرجى الانتظار لحين تعبئة الخانات أدناه بالمعلومات (الماركة، المحرك، الفئة، إلخ).
+            </p>
+          </div>
+        )}
+
+        {aiError && (
+          <div className="col-span-full border border-red-500/20 bg-red-950/20 p-4 rounded-sm flex items-center justify-between gap-3 mb-2">
+            <div className="flex items-center gap-2">
+              <TriangleAlert className="text-red-400 shrink-0" size={18} />
+              <p className="text-red-200 text-xs">{aiError}</p>
+            </div>
+            <button type="button" onClick={() => setAiError('')} className="text-white/40 hover:text-white">
+              <X size={14} />
+            </button>
+          </div>
+        )}
+        
+        <input required placeholder="الماركة (مثل: Range Rover)" value={brand} onChange={e => setBrand(e.target.value)} className={`bg-[#141414] border p-3 text-sm focus:border-[#C5A059] outline-none text-white transition-all ${isAiExtracting ? 'border-[#C5A059]/30 placeholder-[#C5A059]/30' : 'border-white/10'}`} />
         <input required placeholder="الموديل (مثل: Velar)" value={model} onChange={e => setModel(e.target.value)} className="bg-[#141414] border border-white/10 p-3 text-sm focus:border-[#C5A059] outline-none text-white" />
         <input required type="number" placeholder="سنة الصنع (مثل: 2024)" value={year} onChange={e => setYear(e.target.value)} className="bg-[#141414] border border-white/10 p-3 text-sm focus:border-[#C5A059] outline-none text-white" />
         <input required placeholder="الفئة (مثل: الاقتصادية، SUV)" value={category} onChange={e => setCategory(e.target.value)} className="bg-[#141414] border border-white/10 p-3 text-sm focus:border-[#C5A059] outline-none text-white" />
@@ -243,10 +387,31 @@ export function AdminCars() {
         
         <textarea required placeholder="وصف للسيارة ومميزاتها..." value={description} onChange={e => setDescription(e.target.value)} className="col-span-full bg-[#141414] border border-white/10 p-3 text-sm focus:border-[#C5A059] outline-none text-white h-24 resize-none" />
         
-        <button type="submit" disabled={adding || isUploading} className="col-span-full bg-[#C5A059] text-[#0A0A0A] font-bold py-3 hover:bg-white transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-          {adding ? 'جاري الإضافة...' : (isUploading ? 'جاري رفع الصور...' : 'حفظ السيارة في الأسطول')}
-          {(adding || isUploading) && <div className="w-4 h-4 border-2 border-[#0A0A0A]/20 border-t-[#0A0A0A] rounded-full animate-spin"></div>}
-        </button>
+        <div className="col-span-full flex gap-3">
+          {editingCarId && (
+            <button 
+              type="button" 
+              onClick={cancelEditing} 
+              className="flex-1 bg-white/10 text-white font-bold py-3 text-sm hover:bg-white/20 transition-all uppercase tracking-wider cursor-pointer border border-white/10"
+            >
+              إلغاء التعديل
+            </button>
+          )}
+          <button 
+            type="submit" 
+            disabled={adding || isUploading} 
+            className="flex-1 bg-[#C5A059] text-[#0A0A0A] font-bold py-3 hover:bg-white transition-colors disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer text-sm"
+          >
+            {adding 
+              ? (editingCarId ? 'جاري حفظ التعديلات...' : 'جاري إضافة السيارة...') 
+              : (isUploading 
+                  ? 'جاري رفع الصور...' 
+                  : (editingCarId ? 'حفظ التعديلات' : 'حفظ السيارة في الأسطول')
+                )
+            }
+            {(adding || isUploading) && <div className="w-4 h-4 border-2 border-[#0A0A0A]/20 border-t-[#0A0A0A] rounded-full animate-spin"></div>}
+          </button>
+        </div>
       </form>
 
       {loading ? (
@@ -260,12 +425,22 @@ export function AdminCars() {
                 <h4 className="font-serif text-lg">{c.brand} {c.model}</h4>
                 <p className="text-xs text-white/50">{c.category} • {c.pricePerDay} درهم/يوم</p>
               </div>
-              <button 
-                onClick={() => confirmDelete(c)}
-                className="w-10 h-10 border border-red-500/20 text-red-400/60 hover:bg-red-500 hover:text-white hover:border-red-500 flex items-center justify-center transition-all duration-300"
-              >
-                <Trash2 size={16} />
-              </button>
+              <div className="flex gap-2 shrink-0">
+                <button 
+                  onClick={() => startEditing(c)}
+                  className="w-10 h-10 border border-[#C5A059]/20 text-[#C5A059]/80 hover:bg-[#C5A059] hover:text-[#0A0A0A] hover:border-[#C5A059] flex items-center justify-center transition-all duration-300"
+                  title="تعديل بيانات السيارة"
+                >
+                  <Pencil size={16} />
+                </button>
+                <button 
+                  onClick={() => confirmDelete(c)}
+                  className="w-10 h-10 border border-red-500/20 text-red-400/60 hover:bg-red-500 hover:text-white hover:border-red-500 flex items-center justify-center transition-all duration-300"
+                  title="حذف السيارة"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
             </div>
           ))}
         </div>

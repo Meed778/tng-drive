@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { format } from 'date-fns';
 import { useSettings } from '../services/useSettings';
+import { Bell, Sparkles, CalendarClock, X } from 'lucide-react';
 
 interface Booking {
   id: string;
@@ -19,9 +20,16 @@ interface Booking {
   createdAt: any;
 }
 
+interface Toast {
+  id: string;
+  message: string;
+  booking: Booking;
+}
+
 export function AdminBookings() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [toasts, setToasts] = useState<Toast[]>([]);
   const { settings } = useSettings();
 
   const fetchBookings = async () => {
@@ -43,7 +51,61 @@ export function AdminBookings() {
   };
 
   useEffect(() => {
-    fetchBookings();
+    let isFirstLoad = true;
+    
+    // Set up real-time listener for pending bookings
+    const q = query(
+      collection(db, 'bookings'),
+      where('status', '==', 'pending')
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const newBookings: Booking[] = [];
+
+      snapshot.docChanges().forEach((change) => {
+        if (change.type === 'added') {
+          const booking = { id: change.doc.id, ...change.doc.data() } as Booking;
+          if (!isFirstLoad) {
+            newBookings.push(booking);
+          }
+        }
+      });
+
+      // Get current list of all pending bookings
+      const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Booking));
+      setBookings(data);
+      setLoading(false);
+
+      if (!isFirstLoad && newBookings.length > 0) {
+        newBookings.forEach((booking) => {
+          const toastId = Math.random().toString(36).substr(2, 9);
+          const carName = booking.carName || booking.carId;
+          const customer = booking.customerName || 'عميل جديد';
+          
+          const newToast: Toast = {
+            id: toastId,
+            message: `وصل طلب حجز جديد للسيارة "${carName}" من العميل "${customer}"!`,
+            booking
+          };
+          
+          setToasts((prev) => [...prev, newToast]);
+          
+          // Auto-remove after 10 seconds
+          setTimeout(() => {
+            setToasts((prev) => prev.filter((t) => t.id !== toastId));
+          }, 10000);
+        });
+      }
+
+      isFirstLoad = false;
+    }, (error) => {
+      console.error("Firestore real-time listener error, falling back:", error);
+      fetchBookings();
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const handleUpdateStatus = async (id: string, newStatus: 'confirmed' | 'cancelled') => {
@@ -81,7 +143,72 @@ export function AdminBookings() {
   };
 
   return (
-    <div className="w-full bg-[#141414] border border-white/10 p-6 md:p-12 mb-12">
+    <div className="w-full bg-[#141414] border border-white/10 p-6 md:p-12 mb-12 relative">
+      {/* Toast Notifications Container */}
+      <div className="fixed top-6 left-6 z-50 flex flex-col gap-4 max-w-sm w-full pointer-events-none">
+        {toasts.map(toast => (
+          <div 
+            key={toast.id} 
+            className="pointer-events-auto flex gap-4 bg-[#0A0A0A]/95 border border-[#C5A059]/40 p-4 shadow-[0_4px_25px_rgba(197,160,89,0.18)] backdrop-blur-md rounded-sm animate-fade-in-up relative overflow-hidden group hover:border-[#C5A059] transition-all"
+          >
+            <div className="text-[#C5A059] shrink-0 mt-0.5 animate-bounce">
+              <Bell size={20} className="text-[#C5A059]" />
+            </div>
+            
+            <div className="flex-1 space-y-1 text-right" dir="rtl">
+              <h4 className="text-xs font-serif font-bold text-[#C5A059] flex items-center gap-1.5 justify-start">
+                <Sparkles size={12} className="animate-pulse" />
+                طلب حجز جديد معلّق
+              </h4>
+              <p className="text-white text-xs leading-relaxed font-sans font-medium">{toast.message}</p>
+              <div className="flex items-center gap-1.5 text-[9px] text-white/40 font-mono mt-1">
+                <CalendarClock size={10} />
+                <span># {toast.booking.id.slice(0, 8)}</span>
+                {toast.booking.totalPrice && (
+                  <>
+                    <span>•</span>
+                    <span>{toast.booking.totalPrice} درهم</span>
+                  </>
+                )}
+              </div>
+            </div>
+            
+            <button 
+              onClick={() => setToasts(prev => prev.filter(t => t.id !== toast.id))}
+              className="text-white/40 hover:text-white shrink-0 self-start p-1 transition-colors cursor-pointer"
+            >
+              <X size={14} />
+            </button>
+            
+            {/* Countdown shrink line */}
+            <div className="absolute bottom-0 right-0 h-[2px] bg-gradient-to-l from-[#C5A059] to-[#E5C48B] w-full animate-shrink-width" style={{ animationDuration: '10s', animationTimingFunction: 'linear', animationFillMode: 'forwards' }} />
+          </div>
+        ))}
+      </div>
+
+      <style>{`
+        @keyframes shrinkWidth {
+          from { width: 100%; }
+          to { width: 0%; }
+        }
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(16px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-shrink-width {
+          animation: shrinkWidth 10s linear forwards;
+        }
+        .animate-fade-in-up {
+          animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+      `}</style>
+
       <div className="flex justify-between items-end mb-8">
         <div>
           <h2 className="text-3xl font-serif text-[#C5A059] mb-2">لوحة تحكم الإدارة</h2>

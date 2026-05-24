@@ -82,7 +82,7 @@ export function CarDetails({ car, onBack }: CarDetailsProps) {
         {/* Car Details Area */}
         <div className="w-full lg:w-1/2 flex flex-col justify-between h-full min-h-[300px] md:min-h-[400px]">
           <div className="space-y-6 md:space-y-8 mt-2 lg:mt-0">
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <button onClick={onBack} className="text-[#C5A059] text-[9px] md:text-[10px] uppercase tracking-[0.15em] font-bold border border-white/20 px-4 py-2.5 hover:bg-[#C5A059] hover:text-[#0A0A0A] transition-colors ml-4 cursor-pointer active:scale-95 touch-manipulation">
                 ← عودة
               </button>
@@ -90,6 +90,16 @@ export function CarDetails({ car, onBack }: CarDetailsProps) {
               <span className="text-white/50 text-[9px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] font-medium">
                 متاح للتسليم الفوري
               </span>
+
+              {/* Elegant Agency Logo Integration */}
+              <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 px-2.5 py-1.5 rounded-sm mr-auto">
+                <div className="relative w-3.5 h-3.5 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-[#C5A059] to-[#E5C48B] rounded-[2px] rotate-45"></div>
+                  <div className="absolute inset-[1px] bg-[#0A0A0A] rounded-[2px] rotate-45"></div>
+                  <span className="relative z-10 font-serif text-[#C5A059] text-[6px] font-bold italic">tng</span>
+                </div>
+                <span className="text-[8px] tracking-[0.05em] text-white/90 font-bold uppercase font-sans">tng Drive</span>
+              </div>
             </div>
             
             <div className="relative w-full mt-6 md:mt-8 flex flex-col gap-4">

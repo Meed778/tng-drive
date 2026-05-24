@@ -199,12 +199,23 @@ export function CarFleet({ onSelectCar, cars }: CarFleetProps) {
                   </div>
                 </div>
 
-                <div className="flex justify-between items-end border-t border-white/5 pt-4">
+                <div className="flex justify-between items-end border-t border-white/5 pt-4 gap-2">
                   <div>
                     <span className="block text-[9px] md:text-[10px] uppercase tracking-[0.1em] text-white/30 mb-1">السعر اليومي</span>
                     <span className="text-xl font-bold text-white tracking-widest">{car.pricePerDay} <span className="text-[10px] text-white/50 font-normal">درهم</span></span>
                   </div>
-                  <div className="w-10 h-10 border border-white/10 flex items-center justify-center group-hover:bg-[#C5A059] group-hover:text-[#0A0A0A] group-hover:border-[#C5A059] transition-all duration-300 rounded-sm">
+                  
+                  {/* Elegant Agency Logo & Info Panel Integration */}
+                  <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1.5 rounded-sm shrink-0">
+                    <div className="relative w-3.5 h-3.5 flex items-center justify-center">
+                      <div className="absolute inset-0 bg-gradient-to-tr from-[#C5A059] to-[#E5C48B] rounded-[2px] rotate-45"></div>
+                      <div className="absolute inset-[1px] bg-[#141414] rounded-[2px] rotate-45"></div>
+                      <span className="relative z-10 font-serif text-[#C5A059] text-[6px] font-bold italic">tng</span>
+                    </div>
+                    <span className="text-[8px] tracking-[0.05em] text-white/90 font-bold uppercase font-sans">tng Drive</span>
+                  </div>
+
+                  <div className="w-10 h-10 border border-white/10 flex items-center justify-center group-hover:bg-[#C5A059] group-hover:text-[#0A0A0A] group-hover:border-[#C5A059] transition-all duration-300 rounded-sm shrink-0">
                     ←
                   </div>
                 </div>
