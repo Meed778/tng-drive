@@ -5,8 +5,8 @@ import { Car } from '../services/carsData';
 import { useSettings } from '../services/useSettings';
 import { Trash2, TriangleAlert, X, Link, ImagePlus, Upload, CircleAlert } from 'lucide-react';
 
-const FALLBACK_IMG_SMALL = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect fill=%22%23333%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%2210%22%3E%26%231605;&%23273;&%2322;&%231575;%3C/text%3E%3C/svg%3E';
-const FALLBACK_IMG_THUMB = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 60%22%3E%3Crect fill=%22%23333%22 width=%22100%22 height=%2260%22/%3E%3Ctext x=%2250%22 y=%2235%22 text-anchor=%22middle%22 fill=%22%23666%22 font-size=%228%22%3E%26%1575;&%1604;&%1578;&%1608;&%1580;&%1583;%20%1589;&%1608;&%1585;&%1577;%3C/text%3E%3C/svg%3E';
+const FALLBACK_IMG_SMALL = 'data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20fill%3D%22%23333%22%20width%3D%22100%22%20height%3D%22100%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2255%22%20text-anchor%3D%22middle%22%20fill%3D%22%23666%22%20font-size%3D%2210%22%3E%D8%AE%D8%B7%D8%A3%3C%2Ftext%3E%3C%2Fsvg%3E';
+const FALLBACK_IMG_THUMB = 'data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%2060%22%3E%3Crect%20fill%3D%22%23333%22%20width%3D%22100%22%20height%3D%2260%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2235%22%20text-anchor%3D%22middle%22%20fill%3D%22%23666%22%20font-size%3D%228%22%3E%D9%84%D8%A7%20%D8%AA%D9%88%D8%AC%D8%AF%20%D8%B5%D9%88%D8%B1%D8%A9%3C%2Ftext%3E%3C%2Fsvg%3E';
 
 export function AdminCars() {
   const { settings } = useSettings();
